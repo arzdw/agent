@@ -107,3 +107,4 @@ website/.vitepress/cache/
 !public/*.png
 !website/public/*.png
 !resources/social-preview.png
+!resources/logo.png
