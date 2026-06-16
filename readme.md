@@ -54,9 +54,3 @@ OMAGT runs entirely on your local machine. The only external communication is wi
 
 **Does it work on Linux?**
 Yes. OMAGT provides pre-built AppImage installers for Linux (x64).
-
----
-
-## 📄 License
-
-[MIT License](LICENSE)
