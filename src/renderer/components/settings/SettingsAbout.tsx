@@ -123,7 +123,7 @@ export function SettingsAbout({ appVersion }: SettingsAboutProps) {
   return (
     <div className="flex flex-col items-center py-10 space-y-6">
       {/* Icon */}
-      <div className="w-20 h-20 rounded-[20px] ring-1 ring-border-subtle flex items-center justify-center shadow-sm overflow-hidden">
+      <div className="w-20 h-20 rounded-4xl ring-1 ring-border-subtle flex items-center justify-center shadow-sm overflow-hidden">
         <img src={logoUrl} alt="OMAGT" className="w-full h-full object-cover" />
       </div>
 

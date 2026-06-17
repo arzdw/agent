@@ -336,7 +336,7 @@ export function ReviewPanel() {
   // ── Normal (centered card) mode ──
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md">
-      <div className="mx-4 flex flex-col overflow-hidden rounded-[2rem] border border-border-subtle bg-background shadow-2xl w-[1200px] max-w-[95vw] h-[85vh] max-h-[90vh]">
+      <div className="mx-4 flex flex-col overflow-hidden rounded-6xl border border-border-subtle bg-background shadow-2xl w-[1200px] max-w-[95vw] h-[85vh] max-h-[90vh]">
         {toolbar}
         {body}
       </div>

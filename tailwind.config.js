@@ -48,11 +48,11 @@ module.exports = {
       },
       fontSize: {
         xs:   ['0.75rem',  { lineHeight: '1rem' }],     // 12px — chrome/meta
-        sm:   ['0.875rem', { lineHeight: '1.25rem' }],  // 14px — body
-        base: ['0.875rem', { lineHeight: '1.5rem' }],   // 14px — chat prose
-        lg:   ['0.875rem', { lineHeight: '1.5rem' }],   // 14px
-        xl:   ['0.875rem', { lineHeight: '1.5rem' }],   // 14px
-        '2xl':['0.875rem', { lineHeight: '1.5rem' }],   // 14px
+        sm:   ['0.8125rem',{ lineHeight: '1.25rem' }],  // 13px — compact body
+        base: ['0.875rem', { lineHeight: '1.5rem' }],   // 14px — body / chat prose
+        lg:   ['0.9375rem',{ lineHeight: '1.5rem' }],   // 15px — subtle heading
+        xl:   ['1rem',     { lineHeight: '1.5rem' }],   // 16px — section heading
+        '2xl':['1.125rem', { lineHeight: '1.5rem' }],   // 18px — stat / major heading
       },
       boxShadow: {
         'soft': 'var(--shadow-soft)',
@@ -64,6 +64,9 @@ module.exports = {
         'xl': '10px',
         '2xl': '14px',
         '3xl': '16px',
+        '4xl': '20px',
+        '5xl': '24px',
+        '6xl': '28px',
       },
       backgroundImage: {
         'grid-pattern': `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4d2cc' fill-opacity='0.4'%3E%3Cpath d='M0 0h1v40H0V0zm39 0h1v40h-1V0z'/%3E%3Cpath d='M0 0h40v1H0V0zm0 39h40v1H0v-1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,

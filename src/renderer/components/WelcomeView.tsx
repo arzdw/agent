@@ -206,7 +206,7 @@ export function WelcomeView() {
     <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 md:px-8 md:py-14">
       <div className="max-w-[840px] w-full space-y-7 animate-fade-in">
         <div className="space-y-4 text-center">
-          <p className="heading-serif text-sm font-medium tracking-[-0.02em] text-text-secondary text-center">
+          <p className="heading-sans text-sm font-medium tracking-[-0.02em] text-text-secondary text-center">
             {t("welcome.title")}
           </p>
         </div>
@@ -235,7 +235,7 @@ export function WelcomeView() {
           onSubmit={handleSubmit}
           disabled={isSubmitting}
           placeholder={t("welcome.placeholder")}
-          cardClassName="rounded-[1.9rem] bg-background/60 backdrop-blur-sm shadow-elevated px-5 py-5 space-y-4"
+          cardClassName="rounded-6xl bg-background/60 backdrop-blur-sm shadow-elevated px-5 py-5 space-y-4"
           textareaClassName="w-full resize-none bg-transparent border-none outline-none text-text-primary placeholder:text-text-muted text-sm leading-relaxed overflow-hidden"
           bottomSlot={
             <ChatInputBottomBar

@@ -325,7 +325,7 @@ export function RemoteControlPanel({ isActive }: { isActive: boolean }) {
       />
 
       {/* Configuration content */}
-      <div className="p-6 rounded-[2rem] border border-border-subtle bg-background/60">
+      <div className="p-6 rounded-6xl border border-border-subtle bg-background/60">
         {activeStep === "feishu" && (
           <FeishuConfigStep
             feishuAppId={feishuAppId}

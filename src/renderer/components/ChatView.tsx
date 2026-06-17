@@ -1074,7 +1074,7 @@ export function ChatView() {
             onCommand={handleCommand}
             disabled={isSubmitting || isCompacting}
             placeholder={t("chat.typeMessage")}
-            cardClassName="p-3.5 rounded-[1.75rem] bg-background/60 backdrop-blur-sm shadow-elevated"
+            cardClassName="p-3.5 rounded-6xl bg-background/60 backdrop-blur-sm shadow-elevated"
             textareaClassName="w-full resize-none bg-transparent border-none outline-none text-text-primary placeholder:text-text-muted text-sm leading-relaxed py-2 overflow-hidden"
             bottomSlot={
               <ChatInputBottomBar
