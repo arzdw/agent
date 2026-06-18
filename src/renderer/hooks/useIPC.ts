@@ -409,8 +409,11 @@ export function useIPC() {
             break;
 
           case "new-session":
+            store.setWorkingDir(null);
             store.setActiveSession(null);
             store.setShowSettings(false);
+            store.setShowSchedule(false);
+            store.setShowMarketplace(false);
             break;
 
           case "navigate":

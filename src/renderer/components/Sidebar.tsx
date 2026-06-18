@@ -37,6 +37,7 @@ export function Sidebar({ width = 280 }: { width?: number }) {
   const setMessages = useAppStore((s) => s.setMessages);
   const setTraceSteps = useAppStore((s) => s.setTraceSteps);
   const workingDir = useAppStore((s) => s.workingDir);
+  const setWorkingDir = useAppStore((s) => s.setWorkingDir);
   const sidebarCollapsed = useAppStore((s) => s.sidebarCollapsed);
   const conversationsCollapsed = useAppStore((s) => s.conversationsCollapsed);
   const projectsCollapsed = useAppStore((s) => s.projectsCollapsed);
@@ -727,7 +728,7 @@ export function Sidebar({ width = 280 }: { width?: number }) {
                   )}
                 </button>
                 <button
-                  onClick={handleNewSession}
+                  onClick={() => { setWorkingDir(null); handleNewSession(); }}
                   className="w-6 h-6 rounded-md flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
                   title={t("sidebar.newTask")}
                 >
