@@ -634,11 +634,9 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           </div>
         )}
 
-        {/* Input card */}
-        <div
-          className={`relative transition-colors ${isDragging ? "ring-2 ring-accent bg-accent/5" : ""} ${cardClassName}`}
-        >
-          {/* Slash command menu */}
+        {/* Input card wrapper — keeps slash menu outside card div so space-y-* doesn't add margin to textarea */}
+        <div className="relative">
+          {/* Slash command menu — outside the card to avoid space-y-4 pushing textarea down */}
           {showSlashMenu && filteredItems.length > 0 && (
             <div
               ref={slashMenuRef}
@@ -758,6 +756,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               )}
             </div>
           )}
+          {/* Input card */}
+          <div
+            className={`transition-colors ${isDragging ? "ring-2 ring-accent bg-accent/5" : ""} ${cardClassName}`}
+          >
           <textarea
             ref={textareaRef}
             value={prompt}
@@ -867,6 +869,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             }}
           />
           {bottomSlot}
+          </div>
         </div>
       </form>
     );
