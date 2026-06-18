@@ -3612,10 +3612,22 @@ Tool routing:\n
           }
         }
 
+        // pony: Promise.race against abort signal so cancel() can interrupt a stuck prompt()
+        const abortPromise = new Promise<never>((_, reject) => {
+          const onAbort = () =>
+            reject(new DOMException("Aborted", "AbortError"));
+          controller.signal.addEventListener("abort", onAbort, { once: true });
+        });
         const promptResult =
           promptImages.length > 0
-            ? await piSession.prompt(finalPrompt, { images: promptImages })
-            : await piSession.prompt(finalPrompt);
+            ? await Promise.race([
+                piSession.prompt(finalPrompt, { images: promptImages }),
+                abortPromise,
+              ])
+            : await Promise.race([
+                piSession.prompt(finalPrompt),
+                abortPromise,
+              ]);
         log(
           "[AgentRunner] prompt() returned:",
           JSON.stringify(promptResult ?? "void").substring(0, 1000),
@@ -3729,6 +3741,19 @@ Tool routing:\n
     } finally {
       this.activeControllers.delete(session.id);
       this.pathResolver.unregisterSession(session.id);
+
+      // pony: user-aborted → dispose cached piSession so next request starts fresh
+      if (controller.signal.aborted && !abortedByTimeout) {
+        const cached = this.piSessions.get(session.id);
+        if (cached) {
+          this.piSessions.delete(session.id);
+          try {
+            cached.session.dispose();
+          } catch (e) {
+            logWarn("[AgentRunner] pi session dispose error:", e);
+          }
+        }
+      }
 
       // Sync changes from sandbox back to host OS (but don't cleanup - sandbox persists)
       if (useSandboxIsolation && sandboxPath) {
