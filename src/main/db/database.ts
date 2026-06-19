@@ -67,7 +67,7 @@ export interface DatabaseInstance {
 export interface SessionRow {
   id: string;
   title: string;
-  omagt_session_id: string | null;
+  deskwand_session_id: string | null;
   openai_thread_id: string | null;
   status: string;
   cwd: string | null;
@@ -252,7 +252,7 @@ function initializeSchema(database: Database.Database): void {
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
-      omagt_session_id TEXT,
+      deskwand_session_id TEXT,
       openai_thread_id TEXT,
       status TEXT NOT NULL DEFAULT 'idle',
       cwd TEXT,
@@ -267,15 +267,15 @@ function initializeSchema(database: Database.Database): void {
     )
   `);
 
-    // Migration: rename claude_session_id → omagt_session_id for existing databases
+    // Migration: rename claude_session_id → deskwand_session_id for existing databases
     const sessionCols = database
       .prepare("PRAGMA table_info(sessions)")
       .all() as Array<{ name: string }>;
     if (sessionCols.some((c) => c.name === "claude_session_id")) {
       database.exec(
-        "ALTER TABLE sessions RENAME COLUMN claude_session_id TO omagt_session_id",
+        "ALTER TABLE sessions RENAME COLUMN claude_session_id TO deskwand_session_id",
       );
-      log("[Database] Migrated sessions.claude_session_id → omagt_session_id");
+      log("[Database] Migrated sessions.claude_session_id → deskwand_session_id");
     }
 
     ensureColumn(
@@ -518,7 +518,7 @@ export function initDatabase(): DatabaseInstance {
   // Prepare statements for better performance
   const insertSession = rawDb.prepare(`
     INSERT OR REPLACE INTO sessions
-    (id, title, omagt_session_id, openai_thread_id, status, cwd, mounted_paths, allowed_tools, memory_enabled, provider_profile_key, model, thinking_level, is_project_mode, archived, archived_at, created_at, updated_at)
+    (id, title, deskwand_session_id, openai_thread_id, status, cwd, mounted_paths, allowed_tools, memory_enabled, provider_profile_key, model, thinking_level, is_project_mode, archived, archived_at, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
@@ -602,7 +602,7 @@ export function initDatabase(): DatabaseInstance {
         insertSession.run(
           session.id,
           session.title,
-          session.omagt_session_id,
+          session.deskwand_session_id,
           session.openai_thread_id,
           session.status,
           session.cwd,

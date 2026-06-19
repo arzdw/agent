@@ -64,7 +64,7 @@ async function waitFor(predicate: () => boolean, timeoutMs = 5000): Promise<void
 
 describe('SkillsManager storage path management', () => {
   beforeEach(() => {
-    testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'omagt-skills-storage-test-'));
+    testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'deskwand-skills-storage-test-'));
     fs.mkdirSync(path.join(testRoot, 'userData'), { recursive: true });
     fs.mkdirSync(path.join(testRoot, 'home'), { recursive: true });
   });

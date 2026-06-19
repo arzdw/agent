@@ -103,7 +103,7 @@ export interface AppConfig {
   profiles: Partial<Record<ProviderProfileKey, ProviderProfile>>;
   activeProviderKey: ProviderProfileKey;
   providers: Partial<Record<ProviderProfileKey, ApiProviderConfig>>;
-  omagtCodePath?: string;
+  deskwandCodePath?: string;
   defaultWorkdir?: string;
   enableDevLogs: boolean;
   theme: AppTheme;
@@ -121,7 +121,7 @@ export interface AppConfig {
 interface StoredConfig {
   activeProviderKey: ProviderProfileKey;
   providers: Partial<Record<ProviderProfileKey, ApiProviderConfig>>;
-  omagtCodePath: string;
+  deskwandCodePath: string;
   defaultWorkdir: string;
   enableDevLogs: boolean;
   theme: AppTheme;
@@ -139,7 +139,7 @@ export interface LegacyEnvBridgeSnapshot {
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_AUTH_TOKEN?: string;
   ANTHROPIC_BASE_URL?: string;
-  OMAGT_MODEL?: string;
+  DESKWAND_MODEL?: string;
   ANTHROPIC_DEFAULT_SONNET_MODEL?: string;
   OPENAI_API_KEY?: string;
   OPENAI_BASE_URL?: string;
@@ -246,7 +246,7 @@ function defaultStoredConfig(): StoredConfig {
   return {
     activeProviderKey: "openrouter",
     providers: {},
-    omagtCodePath: "",
+    deskwandCodePath: "",
     defaultWorkdir: "",
     enableDevLogs: false,
     theme: "light",
@@ -358,7 +358,7 @@ export function buildLegacyEnvBridgeSnapshot(
       snapshot.ANTHROPIC_BASE_URL = normalizedBaseUrl;
     }
     if (config.model) {
-      snapshot.OMAGT_MODEL = config.model;
+      snapshot.DESKWAND_MODEL = config.model;
       snapshot.ANTHROPIC_DEFAULT_SONNET_MODEL = config.model;
     }
   }
@@ -730,7 +730,7 @@ export function buildProjectedConfig(stored: StoredConfig): AppConfig {
     profiles,
     activeProviderKey: activeKey,
     providers,
-    omagtCodePath: stored.omagtCodePath,
+    deskwandCodePath: stored.deskwandCodePath,
     defaultWorkdir: stored.defaultWorkdir,
     enableDevLogs: stored.enableDevLogs,
     theme: stored.theme,
@@ -862,8 +862,8 @@ export class ConfigStore {
     stored.activeProviderKey = targetKey;
 
     // ── Non-provider fields ──
-    if (updates.omagtCodePath !== undefined)
-      stored.omagtCodePath = updates.omagtCodePath;
+    if (updates.deskwandCodePath !== undefined)
+      stored.deskwandCodePath = updates.deskwandCodePath;
     if (updates.defaultWorkdir !== undefined)
       stored.defaultWorkdir = updates.defaultWorkdir;
     if (updates.enableDevLogs !== undefined)
@@ -1000,7 +1000,7 @@ export class ConfigStore {
     delete process.env.ANTHROPIC_API_KEY;
     delete process.env.ANTHROPIC_AUTH_TOKEN;
     delete process.env.ANTHROPIC_BASE_URL;
-    delete process.env.OMAGT_MODEL;
+    delete process.env.DESKWAND_MODEL;
     delete process.env.ANTHROPIC_DEFAULT_SONNET_MODEL;
     delete process.env.OPENAI_API_KEY;
     delete process.env.OPENAI_BASE_URL;

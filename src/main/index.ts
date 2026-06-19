@@ -367,7 +367,7 @@ function setupTray() {
   }
 
   tray = new Tray(resolvedIconPath);
-  tray.setToolTip("OMAGT");
+  tray.setToolTip("Deskwand");
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -951,7 +951,7 @@ app
     setDevLogsEnabled(enableDevLogs);
 
     // Log environment variables for debugging
-    log("=== OMAGT Starting ===");
+    log("=== Deskwand Starting ===");
     log("Config file:", configStore.getPath());
     log("Is configured:", configStore.isConfigured());
     log("[Runtime] Using pi-coding-agent SDK for all providers");
@@ -968,8 +968,8 @@ app
       "  ANTHROPIC_BASE_URL:",
       legacyEnvSnapshot.ANTHROPIC_BASE_URL || "(not set)",
     );
-    log("  OMAGT_MODEL:", legacyEnvSnapshot.OMAGT_MODEL || "(not set)");
-    log("  OMAGT_CODE_PATH:", process.env.OMAGT_CODE_PATH || "(not set)");
+    log("  DESKWAND_MODEL:", legacyEnvSnapshot.DESKWAND_MODEL || "(not set)");
+    log("  DESKWAND_CODE_PATH:", process.env.DESKWAND_CODE_PATH || "(not set)");
     log(
       "  OPENAI_API_KEY:",
       legacyEnvSnapshot.OPENAI_API_KEY ? "✓ Set" : "✗ Not set",
@@ -1186,7 +1186,7 @@ app
     const message =
       error instanceof Error ? error.message : "Unknown startup error";
     dialog.showErrorBox(
-      "OMAGT 启动失败",
+      "Deskwand 启动失败",
       `${message}\n\n请查看日志获取更多信息。`,
     );
     app.quit();
@@ -2609,7 +2609,7 @@ ipcMain.handle("logs.export", async () => {
         sandboxEnabled: !!configStore.get("sandboxEnabled"),
         thinkingEnabled: !!configStore.get("enableThinking"),
         apiKeyConfigured: !!configStore.get("apiKey"),
-        omagtCodePathConfigured: !!configStore.get("omagtCodePath"),
+        deskwandCodePathConfigured: !!configStore.get("deskwandCodePath"),
         defaultWorkdir: configStore.get("defaultWorkdir") || null,
       },
       sandbox: {
@@ -2629,7 +2629,7 @@ ipcMain.handle("logs.export", async () => {
     // Show save dialog
     const result = await dialog.showSaveDialog(mainWindow!, {
       title: "Export Logs",
-      defaultPath: `omagt-logs-${new Date().toISOString().split("T")[0]}.zip`,
+      defaultPath: `deskwand-logs-${new Date().toISOString().split("T")[0]}.zip`,
       filters: [
         { name: "ZIP Archive", extensions: ["zip"] },
         { name: "All Files", extensions: ["*"] },
@@ -2708,7 +2708,7 @@ ipcMain.handle("logs.export", async () => {
       });
       archive.append(
         [
-          "OMAGT diagnostic bundle",
+          "Deskwand diagnostic bundle",
           `Exported at: ${diagnosticsSummary.exportedAt}`,
           "",
           "Included files:",

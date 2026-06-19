@@ -46,7 +46,7 @@ export interface WSLStatus {
   nodeAvailable?: boolean;
   pythonAvailable?: boolean;
   pipAvailable?: boolean;
-  omagtCodeAvailable?: boolean;
+  deskwandCodeAvailable?: boolean;
   version?: string;
   pythonVersion?: string;
 }
@@ -59,7 +59,7 @@ export interface LimaStatus {
   nodeAvailable?: boolean;
   pythonAvailable?: boolean;
   pipAvailable?: boolean;
-  omagtCodeAvailable?: boolean;
+  deskwandCodeAvailable?: boolean;
   version?: string;
   pythonVersion?: string;
 }

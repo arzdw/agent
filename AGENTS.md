@@ -6,7 +6,7 @@
 
 ## 1. 项目概述
 
-- **项目名**: omagt（Oh My Agent）— 开源 AI 智能助手桌面应用
+- **项目名**: deskwand（Oh My Agent）— 开源 AI 智能助手桌面应用
 - **类型**: Electron 桌面应用（主进程）+ React + Tailwind 渲染层
 - **语言**: TypeScript（strict 模式），Node.js ≥ 22
 - **包管理器**: npm

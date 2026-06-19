@@ -138,7 +138,7 @@ function initLogFile(): void {
     // Write header
     const header = `
 ================================================================================
-OMAGT Application Log
+Deskwand Application Log
 Started: ${new Date().toISOString()}
 Platform: ${process.platform}
 Arch: ${process.arch}

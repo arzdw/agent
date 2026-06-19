@@ -10,7 +10,7 @@ describe('normalizeLocalFileMarkdownLinks', () => {
     const input = [
       '已创建 Word 文档：',
       '[北京未来一个月天气介绍.docx](',
-      '/Users/haoqing/Library/Application Support/omagtgt/default_working_dir/北京未来一个月天气介绍.docx',
+      '/Users/haoqing/Library/Application Support/deskwandgt/default_working_dir/北京未来一个月天气介绍.docx',
       ')',
     ].join('\n');
 
@@ -35,7 +35,7 @@ describe('normalizeLocalFileMarkdownLinks', () => {
 describe('extractLocalFilePathFromHref', () => {
   it('extracts decoded local path from file URL', () => {
     const href = 'file:///Users/haoqing/Library/Application%20Support/oma/%E6%B5%8B%E8%AF%95.docx';
-    expect(extractLocalFilePathFromHref(href)).toBe('/Users/haoqing/Library/Application Support/omagtgt/测试.docx');
+    expect(extractLocalFilePathFromHref(href)).toBe('/Users/haoqing/Library/Application Support/deskwandgt/测试.docx');
   });
 
   it('extracts UNC paths from file URLs without dropping the host', () => {
@@ -57,20 +57,20 @@ describe('extractLocalFilePathFromHref', () => {
 describe('resolveLocalFilePathFromHref', () => {
   it('resolves relative artifact links using cwd', () => {
     const href = 'reports/北京未来一个月天气介绍.docx';
-    expect(resolveLocalFilePathFromHref(href, '/Users/haoqing/Library/Application Support/omagtgt/default_working_dir'))
-      .toBe('/Users/haoqing/Library/Application Support/omagtgt/default_working_dir/reports/北京未来一个月天气介绍.docx');
+    expect(resolveLocalFilePathFromHref(href, '/Users/haoqing/Library/Application Support/deskwandgt/default_working_dir'))
+      .toBe('/Users/haoqing/Library/Application Support/deskwandgt/default_working_dir/reports/北京未来一个月天气介绍.docx');
   });
 
   it('resolves /workspace links using cwd like artifact panel', () => {
     const href = '/workspace/reports/summary.docx';
-    expect(resolveLocalFilePathFromHref(href, '/Users/haoqing/Library/Application Support/omagtgt/default_working_dir'))
-      .toBe('/Users/haoqing/Library/Application Support/omagtgt/default_working_dir/reports/summary.docx');
+    expect(resolveLocalFilePathFromHref(href, '/Users/haoqing/Library/Application Support/deskwandgt/default_working_dir'))
+      .toBe('/Users/haoqing/Library/Application Support/deskwandgt/default_working_dir/reports/summary.docx');
   });
 
   it('normalizes line breaks before resolving local href', () => {
     const href = '/Users/haoqing/Library/Application\n Support/oma/default_working_dir/文档.docx';
     expect(resolveLocalFilePathFromHref(href, null))
-      .toBe('/Users/haoqing/Library/Application Support/omagtgt/default_working_dir/文档.docx');
+      .toBe('/Users/haoqing/Library/Application Support/deskwandgt/default_working_dir/文档.docx');
   });
 
   it('keeps UNC paths intact after resolving file URLs', () => {

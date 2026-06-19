@@ -3,7 +3,7 @@
  *
  * CLI-driven UI navigation server (155 lines).
  *
- * Exposes HTTP endpoints on 127.0.0.1:19888 for external tools (e.g. Omagt Agent)
+ * Exposes HTTP endpoints on 127.0.0.1:19888 for external tools (e.g. Deskwand Agent)
  * to control app page navigation programmatically:
  *   GET /status           → current page state
  *   GET /navigate?page=X  → navigate to welcome, settings, or session pages

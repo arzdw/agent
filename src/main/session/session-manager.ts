@@ -152,7 +152,7 @@ export class SessionManager {
     this.pluginRuntimeService = pluginRuntimeService;
 
     // Store user skills path for lazy BackgroundReviewService creation
-    this._userSkillsPath = path.join(app.getPath("home"), ".omagt", "skills");
+    this._userSkillsPath = path.join(app.getPath("home"), ".deskwand", "skills");
 
     // Initialize MCP Manager
     this.mcpManager = new MCPManager();
@@ -421,7 +421,7 @@ export class SessionManager {
     this.db.sessions.create({
       id: session.id,
       title: session.title,
-      omagt_session_id: session.omagtSessionId || null,
+      deskwand_session_id: session.deskwandSessionId || null,
       openai_thread_id: session.openaiThreadId || null,
       status: session.status,
       cwd: session.cwd || null,
@@ -463,7 +463,7 @@ export class SessionManager {
     return {
       id: row.id,
       title: row.title,
-      omagtSessionId: row.omagt_session_id || undefined,
+      deskwandSessionId: row.deskwand_session_id || undefined,
       openaiThreadId: row.openai_thread_id || undefined,
       status: row.status as Session["status"],
       cwd: row.cwd || undefined,
@@ -512,7 +512,7 @@ export class SessionManager {
       return {
         id: row.id,
         title: row.title,
-        omagtSessionId: row.omagt_session_id || undefined,
+        deskwandSessionId: row.deskwand_session_id || undefined,
         openaiThreadId: row.openai_thread_id || undefined,
         status: row.status as Session["status"],
         cwd: row.cwd || undefined,
@@ -1493,12 +1493,12 @@ export class SessionManager {
       this.stopSession(sessionId);
     }
     const mountedPaths = this.buildMountedPaths(cwd);
-    // Clear omagt_session_id in DB so next query creates a new SDK session
+    // Clear deskwand_session_id in DB so next query creates a new SDK session
     // (Agent SDK sessions cannot change cwd mid-session)
     this.db.sessions.update(sessionId, {
       cwd,
       mounted_paths: JSON.stringify(mountedPaths),
-      omagt_session_id: null,
+      deskwand_session_id: null,
       openai_thread_id: null,
       updated_at: Date.now(),
     });

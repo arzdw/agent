@@ -7,7 +7,7 @@
  *
  * In Hermes Agent, ``spawn_background_review_thread`` forks the full AIAgent
  * with a whitelist of skill_manage + memory tools.
- * In omagt, a light AgentRunner fork replaces Hermes' Python AIAgent fork.
+ * In deskwand, a light AgentRunner fork replaces Hermes' Python AIAgent fork.
  *
  * Adapted from Hermes Agent background_review.py:400-608
  */
@@ -118,7 +118,7 @@ learning opportunities.`;
       const reviewSession: Session = {
         id: `bg-review-${Date.now()}`,
         title: "",
-        omagtSessionId: "",
+        deskwandSessionId: "",
         status: "idle",
         cwd: os.homedir(),
         mountedPaths: [],

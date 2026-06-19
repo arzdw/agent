@@ -3,12 +3,12 @@ const path = require('node:path');
 
 const LEGACY_CLEANUP_ARTIFACTS = [
   {
-    source: path.join('resources', 'windows', 'OMAGT-Legacy-Cleanup.cmd'),
-    target: 'OMAGT-Legacy-Cleanup.cmd',
+    source: path.join('resources', 'windows', 'Deskwand-Legacy-Cleanup.cmd'),
+    target: 'Deskwand-Legacy-Cleanup.cmd',
   },
   {
-    source: path.join('resources', 'windows', 'OMAGT-Legacy-Cleanup.ps1'),
-    target: 'OMAGT-Legacy-Cleanup.ps1',
+    source: path.join('resources', 'windows', 'Deskwand-Legacy-Cleanup.ps1'),
+    target: 'Deskwand-Legacy-Cleanup.ps1',
   },
 ];
 

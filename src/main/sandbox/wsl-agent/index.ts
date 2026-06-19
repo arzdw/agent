@@ -5,7 +5,7 @@
  * This script runs inside WSL2 and handles:
  * - Command execution in isolated environment
  * - File operations with path validation
- * - Omagt-code execution
+ * - Deskwand-code execution
  *
  * Communication is via stdin/stdout JSON-RPC.
  */
@@ -347,9 +347,9 @@ class SandboxAgent {
   }
 
   /**
-   * Run omagt-code CLI
+   * Run deskwand-code CLI
    */
-  async runOmagtCode(params: {
+  async runDeskwandCode(params: {
     prompt: string;
     cwd?: string;
     model?: string;
@@ -360,9 +360,9 @@ class SandboxAgent {
     const cwd = params.cwd || this.workspacePath;
     this.validatePath(cwd);
 
-    log("Running omagt-code in:", cwd);
+    log("Running deskwand-code in:", cwd);
 
-    // Build omagt command
+    // Build deskwand command
     const args = ["--print"];
     if (params.model) {
       args.push("--model", params.model);
@@ -373,7 +373,7 @@ class SandboxAgent {
     args.push(params.prompt);
 
     return new Promise((resolve, reject) => {
-      const proc = spawn("omagt", args, {
+      const proc = spawn("deskwand", args, {
         cwd,
         env: {
           ...process.env,
@@ -417,7 +417,7 @@ class SandboxAgent {
           }
         } else {
           reject(
-            new Error(`omagt-code exited with code ${code}: ${errorOutput}`),
+            new Error(`deskwand-code exited with code ${code}: ${errorOutput}`),
           );
         }
       });
@@ -486,9 +486,9 @@ class SandboxAgent {
       case "copyFile":
         return this.copyFile(params as Parameters<typeof this.copyFile>[0]);
 
-      case "runOmagtCode":
-        return this.runOmagtCode(
-          params as Parameters<typeof this.runOmagtCode>[0],
+      case "runDeskwandCode":
+        return this.runDeskwandCode(
+          params as Parameters<typeof this.runDeskwandCode>[0],
         );
 
       case "shutdown":

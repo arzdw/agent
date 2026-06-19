@@ -28,11 +28,11 @@ class RemoteConfigStore {
       pairedUsers: PairedUser[];
     } & Record<string, unknown>;
     this.store = createEncryptedStoreWithKeyRotation<RemoteConfigRecord>({
-      stableKey: "omagt-remote-stable-v1",
+      stableKey: "deskwand-remote-stable-v1",
       legacyKeys: [],
       storeOptions: {
         name: "remote-config",
-        projectName: "omagt",
+        projectName: "deskwand",
         defaults: {
           ...DEFAULT_REMOTE_CONFIG,
           pairedUsers: [],

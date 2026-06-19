@@ -41,7 +41,7 @@ async function loadBootstrap() {
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
 
-const LIMA_INSTANCE_NAME = "omagt-sandbox";
+const LIMA_INSTANCE_NAME = "deskwand-sandbox";
 const LIMA_SHELL_RETRY_DELAY_MS = 1000;
 const LIMA_SHELL_RETRY_COUNT = 12;
 
@@ -267,18 +267,18 @@ export class LimaBridge implements SandboxExecutor {
         log("[Lima] Python not found");
       }
 
-      // Check omagt-code
-      let omagtCodeAvailable = false;
+      // Check deskwand-code
+      let deskwandCodeAvailable = false;
       if (nodeAvailable) {
         try {
           await execLimaShellWithRetry(
-            'bash -c "source ~/.nvm/nvm.sh 2>/dev/null; which omagt"',
+            'bash -c "source ~/.nvm/nvm.sh 2>/dev/null; which deskwand"',
             10000,
           );
-          omagtCodeAvailable = true;
-          log("[Lima] omagt-code found");
+          deskwandCodeAvailable = true;
+          log("[Lima] deskwand-code found");
         } catch {
-          log("[Lima] omagt-code not found");
+          log("[Lima] deskwand-code not found");
         }
       }
 
@@ -290,7 +290,7 @@ export class LimaBridge implements SandboxExecutor {
         nodeAvailable,
         pythonAvailable,
         pipAvailable,
-        omagtCodeAvailable,
+        deskwandCodeAvailable,
         version: nodeVersion,
         pythonVersion,
       };
@@ -570,7 +570,7 @@ export class LimaBridge implements SandboxExecutor {
       );
       log("[Lima] Skill dependencies installed successfully");
     } catch (error) {
-      // Non-critical - Omagt can install packages on demand
+      // Non-critical - Deskwand can install packages on demand
       log(
         "[Lima] Failed to pre-install skill dependencies (will install on demand):",
         (error as Error).message,
@@ -579,19 +579,19 @@ export class LimaBridge implements SandboxExecutor {
   }
 
   /**
-   * Install omagt-code in Lima
+   * Install deskwand-code in Lima
    */
-  static async installOmagtCodeInLima(): Promise<boolean> {
-    log("[Lima] Installing omagt-code...");
+  static async installDeskwandCodeInLima(): Promise<boolean> {
+    log("[Lima] Installing deskwand-code...");
     try {
       await execLimaShellWithRetry(
-        'bash -c "source ~/.nvm/nvm.sh && npm install -g @anthropic-ai/omagt-code"',
+        'bash -c "source ~/.nvm/nvm.sh && npm install -g @anthropic-ai/deskwand-code"',
         180000,
       );
-      log("[Lima] omagt-code installed");
+      log("[Lima] deskwand-code installed");
       return true;
     } catch (error) {
-      logError("[Lima] Failed to install omagt-code:", error);
+      logError("[Lima] Failed to install deskwand-code:", error);
       return false;
     }
   }
@@ -989,9 +989,9 @@ export class LimaBridge implements SandboxExecutor {
   }
 
   /**
-   * Run omagt-code in Lima
+   * Run deskwand-code in Lima
    */
-  async runOmagtCode(
+  async runDeskwandCode(
     prompt: string,
     options: {
       cwd?: string;
@@ -1006,7 +1006,7 @@ export class LimaBridge implements SandboxExecutor {
     }
 
     const result = await this.sendRequest<{ messages: unknown[] }>(
-      "runOmagtCode",
+      "runDeskwandCode",
       {
         prompt,
         cwd: options.cwd,
@@ -1016,7 +1016,7 @@ export class LimaBridge implements SandboxExecutor {
         env: options.env,
       },
       300000,
-    ); // 5 minute timeout for omagt-code
+    ); // 5 minute timeout for deskwand-code
 
     // Convert to async iterable
     return (async function* () {

@@ -15,7 +15,7 @@ import {
 let tmpDir = "";
 
 beforeEach(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "omagt-agent-manifest-test-"));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "deskwand-agent-manifest-test-"));
 });
 
 afterEach(() => {

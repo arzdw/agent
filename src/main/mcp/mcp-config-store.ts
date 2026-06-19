@@ -83,8 +83,8 @@ class MCPConfigStore {
       projectName?: string;
     } = {
       name: "mcp-config",
-      projectName: "omagt",
-      cwd: path.join(os.homedir(), ".omagt"),
+      projectName: "deskwand",
+      cwd: path.join(os.homedir(), ".deskwand"),
       defaults: {
         servers: [],
       },

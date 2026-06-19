@@ -60,8 +60,8 @@ function buildCheckList(platform, arch) {
       severity: 'fatal',
     },
     {
-      label: 'Built-in skills directory (.omagt/skills/)',
-      relPath: '.omagt/skills',
+      label: 'Built-in skills directory (.deskwand/skills/)',
+      relPath: '.deskwand/skills',
       type: 'dir',
       severity: 'fatal',
     },

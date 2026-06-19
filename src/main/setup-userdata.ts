@@ -7,4 +7,4 @@ import { app } from "electron";
 import { join } from "path";
 import * as os from "node:os";
 
-app.setPath("userData", join(os.homedir(), ".omagt"));
+app.setPath("userData", join(os.homedir(), ".deskwand"));

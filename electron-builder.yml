@@ -1,5 +1,5 @@
-appId: com.omagt.app
-productName: OMAGT
+appId: com.deskwand.app
+productName: Deskwand
 directories:
   output: release
   buildResources: resources
@@ -73,7 +73,7 @@ win:
       to: node
     - from: dist-wsl-agent
       to: wsl-agent
-    - from: .omagt/skills
+    - from: .deskwand/skills
       to: skills
 mac:
   icon: resources/icon.icns
@@ -89,8 +89,8 @@ mac:
   entitlementsInherit: resources/entitlements.mac.plist
   extendInfo:
     LSApplicationCategoryType: public.app-category.developer-tools
-    NSScreenCaptureUsageDescription: 'OMAGT needs screen recording access for GUI automation.'
-    NSAccessibilityUsageDescription: 'OMAGT needs accessibility access for GUI automation.'
+    NSScreenCaptureUsageDescription: 'Deskwand needs screen recording access for GUI automation.'
+    NSAccessibilityUsageDescription: 'Deskwand needs accessibility access for GUI automation.'
   extraResources:
     - from: .bundle-resources/mcp
       to: mcp
@@ -104,7 +104,7 @@ mac:
       to: tools
     - from: dist-lima-agent
       to: lima-agent
-    - from: .omagt/skills
+    - from: .deskwand/skills
       to: skills
 
 linux:
@@ -121,7 +121,7 @@ linux:
       to: node
     - from: resources/python/linux-${arch}
       to: python
-    - from: .omagt/skills
+    - from: .deskwand/skills
       to: skills
 
 nsis:
@@ -144,7 +144,7 @@ dmg:
   contents:
     - x: 150
       y: 220
-      name: 'OMAGT.app'
+      name: 'Deskwand.app'
     - x: 450
       y: 220
       type: link
@@ -156,5 +156,5 @@ extraMetadata:
 
 publish:
   provider: generic
-  url: https://file.omagt.com
+  url: https://file.deskwand.com
   channel: latest

@@ -9,8 +9,8 @@ describe('windows legacy uninstall remediation', () => {
 
     expect(builderConfig).toContain('include: installer.nsh');
     expect(installerInclude).toContain('!macro customUnInstallCheck');
-    expect(installerInclude).toContain('OMAGT-Legacy-Cleanup.cmd');
-    expect(installerInclude).toContain('$LOCALAPPDATA\\Programs\\OMAGT');
+    expect(installerInclude).toContain('Deskwand-Legacy-Cleanup.cmd');
+    expect(installerInclude).toContain('$LOCALAPPDATA\\Programs\\Deskwand');
   });
 
   it('closes long-lived resources during quit cleanup', () => {

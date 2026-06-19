@@ -360,8 +360,8 @@ export const useAppStore = create<AppState>((set) => ({
 
   setActiveSession: (sessionId) => {
     try {
-      if (sessionId) localStorage.setItem("omagt.lastSessionId", sessionId);
-      else localStorage.removeItem("omagt.lastSessionId");
+      if (sessionId) localStorage.setItem("deskwand.lastSessionId", sessionId);
+      else localStorage.removeItem("deskwand.lastSessionId");
     } catch {
       /* ignore */
     }

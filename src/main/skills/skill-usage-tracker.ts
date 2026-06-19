@@ -2,7 +2,7 @@
  * @module main/skills/skill-usage-tracker
  *
  * Tracks per-skill usage metadata in a sidecar JSON file
- * (~/.omagt/skills/.usage.json) keyed by skill name.
+ * (~/.deskwand/skills/.usage.json) keyed by skill name.
  *
  * Analogous to Hermes Agent's `tools/skill_usage.py`.
  *

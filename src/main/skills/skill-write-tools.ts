@@ -3,7 +3,7 @@
  *
  * Agent-facing tools for creating, patching, and extending skills.
  *
- * These tools write to the global skills directory (~/.omagt/skills/) and
+ * These tools write to the global skills directory (~/.deskwand/skills/) and
  * enforce strict safety boundaries:
  * - Only agent-created skills can be modified (skill_patch)
  * - All writes are atomic (tmp → rename)
@@ -199,7 +199,7 @@ function patchSection(
 // ---------------------------------------------------------------------------
 
 export interface SkillWriteToolsOptions {
-  /** Root path for global skills (~/.omagt/skills/) */
+  /** Root path for global skills (~/.deskwand/skills/) */
   globalSkillsPath: string;
   /** Called after a skill is created/modified to trigger hot-reload */
   onSkillChanged?: () => void;

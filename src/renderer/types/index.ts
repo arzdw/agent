@@ -4,7 +4,7 @@ import type { ThemePreset } from "../../shared/theme";
 export interface Session {
   id: string;
   title: string;
-  omagtSessionId?: string;
+  deskwandSessionId?: string;
   openaiThreadId?: string;
   status: SessionStatus;
   cwd?: string;
@@ -242,7 +242,7 @@ export interface PluginCatalogItemV2 {
   pluginId?: string;
   installCommand?: string;
   detailUrl?: string;
-  catalogSource?: "omagt-marketplace" | "pi-agent";
+  catalogSource?: "deskwand-marketplace" | "pi-agent";
   packageType?: "extension" | "skill" | "prompt" | "theme";
   downloadCount?: number;
   license?: string;
@@ -820,7 +820,7 @@ export interface AppConfig {
   profiles: Partial<Record<ProviderProfileKey, ProviderProfile>>;
   activeProviderKey: ProviderProfileKey;
   providers: Partial<Record<ProviderProfileKey, ApiProviderConfig>>;
-  omagtCodePath?: string;
+  deskwandCodePath?: string;
   defaultWorkdir?: string;
   theme?: AppTheme;
   themePreset?: ThemePreset;

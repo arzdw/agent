@@ -22,8 +22,8 @@ export interface ValidationResult {
 // Forbidden path patterns for Linux/WSL - these should never be accessed
 const FORBIDDEN_PATTERNS_LINUX = [
   /^\/mnt\//, // Windows filesystem mounts
-  /^\/home\/(?!.*\/\.omagt\/sandbox)/, // User home (except ~/.omagt/sandbox)
-  /^\/root\/(?!\.omagt\/sandbox|\.nvm)/, // Root directory (except .omagt/sandbox and .nvm)
+  /^\/home\/(?!.*\/\.deskwand\/sandbox)/, // User home (except ~/.deskwand/sandbox)
+  /^\/root\/(?!\.deskwand\/sandbox|\.nvm)/, // Root directory (except .deskwand/sandbox and .nvm)
   /^\/etc\//, // System configuration
   /^\/var\//, // Variable data
   /^\/usr\//, // System binaries

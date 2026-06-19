@@ -9,7 +9,7 @@ describe("CoreMemoryStore", () => {
   let filePath: string;
 
   beforeEach(() => {
-    tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "omagt-core-memory-"));
+    tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "deskwand-core-memory-"));
     filePath = path.join(tempRoot, "core_memory.json");
   });
 

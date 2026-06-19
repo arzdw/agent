@@ -25,7 +25,7 @@ describe('AgentRunner pi-coding-agent integration', () => {
 
   it('uses standard markdown link guidance for sources citations', () => {
     expect(agentRunnerContent).toContain(
-      'otherwise use standard Markdown links: [Title](https://omagt.ai/chat/URL)'
+      'otherwise use standard Markdown links: [Title](https://deskwand.ai/chat/URL)'
     );
   });
 

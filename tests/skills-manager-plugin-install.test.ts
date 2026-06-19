@@ -49,9 +49,9 @@ function createPluginDirectory(
 ): string {
   const pluginRoot = path.join(root, pluginName);
   if (withManifest) {
-    fs.mkdirSync(path.join(pluginRoot, '.omagt-plugin'), { recursive: true });
+    fs.mkdirSync(path.join(pluginRoot, '.deskwand-plugin'), { recursive: true });
     fs.writeFileSync(
-      path.join(pluginRoot, '.omagt-plugin', 'plugin.json'),
+      path.join(pluginRoot, '.deskwand-plugin', 'plugin.json'),
       JSON.stringify({ name: pluginName, version: '1.0.0', description: `${pluginName} plugin` }, null, 2),
       'utf8'
     );
@@ -72,7 +72,7 @@ function createPluginDirectory(
 
 describe('SkillsManager installPluginFromDirectory', () => {
   beforeEach(() => {
-    testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'omagt-plugin-test-'));
+    testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'deskwand-plugin-test-'));
     fs.mkdirSync(path.join(testRoot, 'userData'), { recursive: true });
     fs.mkdirSync(path.join(testRoot, 'home'), { recursive: true });
   });
@@ -111,7 +111,7 @@ describe('SkillsManager installPluginFromDirectory', () => {
     const result = await manager.installPluginFromDirectory(pluginRoot);
     expect(result.installedSkills).toEqual(['alpha']);
 
-    const installedSkillPath = path.join(testRoot, 'home', '.omagt', 'skills', 'alpha', 'SKILL.md');
+    const installedSkillPath = path.join(testRoot, 'home', '.deskwand', 'skills', 'alpha', 'SKILL.md');
     expect(fs.readFileSync(installedSkillPath, 'utf8')).toContain('New description');
   });
 

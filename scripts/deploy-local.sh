@@ -7,9 +7,9 @@
 
 set -euo pipefail
 
-APP_NAME="OMAGT"
+APP_NAME="Deskwand"
 APP_PATH="/Applications/${APP_NAME}.app"
-ARTIFACT_NAME="omagt-macos"
+ARTIFACT_NAME="deskwand-macos"
 
 NO_WAIT=false
 for arg in "$@"; do

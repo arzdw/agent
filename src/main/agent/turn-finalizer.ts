@@ -8,7 +8,7 @@
  *
  * Hermes uses _skill_nudge_interval (default 10 tool-iterations).
  * We use a turn-based interval (default 3 user→assistant turns) since
- * omagt counts full turns rather than individual tool-call iterations.
+ * deskwand counts full turns rather than individual tool-call iterations.
  *
  * No keyword matching, no heuristic signal detection. The LLM itself
  * decides whether the conversation snapshot contains anything worth

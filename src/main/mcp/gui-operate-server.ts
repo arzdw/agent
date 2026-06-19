@@ -44,8 +44,8 @@ const execFileAsync = promisify(execFile);
 const PLATFORM = os.platform(); // 'darwin' for macOS, 'win32' for Windows
 writeMCPLog(`Platform detected: ${PLATFORM}`, "Bootstrap");
 
-// Get OMAGT data directory for persistent storage (~/.omagt)
-const OPEN_COWORK_DATA_DIR = path.join(os.homedir(), ".omagt");
+// Get Deskwand data directory for persistent storage (~/.deskwand)
+const OPEN_COWORK_DATA_DIR = path.join(os.homedir(), ".deskwand");
 
 // Directory for storing GUI operate files (screenshots, etc.)
 const GUI_OPERATE_DIR = path.join(OPEN_COWORK_DATA_DIR, "gui_operate");
@@ -1952,9 +1952,9 @@ async function executeCliclick(
     if (/Accessibility privileges not enabled/i.test(result.stderr || "")) {
       const hint =
         "\n\nmacOS 权限提示 / Permissions:\n" +
-        "- System Settings → Privacy & Security → Accessibility：允许 OMAGT\n" +
+        "- System Settings → Privacy & Security → Accessibility：允许 Deskwand\n" +
         "- 如果是终端运行：允许 Terminal/iTerm\n" +
-        "- 授权后请重启 OMAGT 再重试\n";
+        "- 授权后请重启 Deskwand 再重试\n";
       throw new Error(
         `cliclick cannot control UI because Accessibility permission is not enabled.${hint}`,
       );
@@ -1965,8 +1965,8 @@ async function executeCliclick(
     const baseMessage = error instanceof Error ? error.message : String(error);
     const hint =
       "\n\nmacOS 权限提示 / Permissions:\n" +
-      "- System Settings → Privacy & Security → Accessibility：允许 OMAGT\n" +
-      "- System Settings → Privacy & Security → Automation：允许 OMAGT 控制 “System Events”\n";
+      "- System Settings → Privacy & Security → Accessibility：允许 Deskwand\n" +
+      "- System Settings → Privacy & Security → Automation：允许 Deskwand 控制 “System Events”\n";
     throw new Error(`${baseMessage}${hint}`);
   }
 }
@@ -4090,7 +4090,7 @@ async function takeScreenshot(
     const baseMessage = error instanceof Error ? error.message : String(error);
     const hint =
       "\n\nmacOS 权限提示 / Permissions:\n" +
-      "- System Settings → Privacy & Security → Screen Recording：允许 OMAGT\n" +
+      "- System Settings → Privacy & Security → Screen Recording：允许 Deskwand\n" +
       "- 重新启动应用后再试 / Restart the app and try again\n";
     throw new Error(`${baseMessage}${hint}`);
   }
@@ -4616,7 +4616,7 @@ async function callVisionAPIWithTimeout(
   const anthropicBaseUrl = process.env.ANTHROPIC_BASE_URL?.trim();
   const openAIModel = process.env.OPENAI_MODEL?.trim();
   const anthropicModel =
-    process.env.OMAGT_MODEL?.trim() ||
+    process.env.DESKWAND_MODEL?.trim() ||
     process.env.ANTHROPIC_DEFAULT_SONNET_MODEL?.trim();
   // NOTE: OPENAI_API_KEY may be auto-hydrated for MCP subprocess compatibility.
   // Route inference must rely on semantic OpenAI hints (base/model), not key presence.
@@ -4724,8 +4724,8 @@ async function callVisionAPIWithTimeout(
     };
 
     if (isOpenRouter) {
-      headers["HTTP-Referer"] = "https://github.com/omagent/agent";
-      headers["X-Title"] = "OMAGT";
+      headers["HTTP-Referer"] = "https://github.com/deskwand/agent";
+      headers["X-Title"] = "Deskwand";
     }
 
     return new Promise<string>((resolve, reject) => {
@@ -7304,7 +7304,7 @@ async function main() {
         ),
         openAIModel: process.env.OPENAI_MODEL || "(unset)",
         anthropicModel:
-          process.env.OMAGT_MODEL ||
+          process.env.DESKWAND_MODEL ||
           process.env.ANTHROPIC_DEFAULT_SONNET_MODEL ||
           "(unset)",
       }),

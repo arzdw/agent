@@ -957,7 +957,7 @@ export class MemoryService {
       model: row.model || undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      omagtSessionId: row.omagt_session_id || undefined,
+      deskwandSessionId: row.deskwand_session_id || undefined,
       openaiThreadId: row.openai_thread_id || undefined,
     };
   }

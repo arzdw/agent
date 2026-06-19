@@ -120,7 +120,7 @@ function resolveStorePath<T extends Record<string, unknown>>(
   }
 
   try {
-    const userDataPath = path.join(os.homedir(), ".omagt");
+    const userDataPath = path.join(os.homedir(), ".deskwand");
     return path.join(userDataPath, `${name}.json`);
   } catch {
     // Fall back to letting electron-store resolve the path itself.
@@ -180,7 +180,7 @@ export function createEncryptedStoreWithKeyRotation<
   const stableKey = options.stableKey;
   const legacyKeys = uniqueValues(options.legacyKeys);
 
-  const storeCwd = path.join(os.homedir(), ".omagt");
+  const storeCwd = path.join(os.homedir(), ".deskwand");
 
   try {
     return new Store<T>({

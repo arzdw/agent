@@ -35,8 +35,8 @@ describe('extractFilePathFromToolOutput', () => {
   });
 
   it('extracts absolute path from updated-file messages', () => {
-    const output = 'The file /Users/haoqing/Library/Application Support/omagtgt/default_working_dir/slide2.html has been updated successfully.';
-    expect(extractFilePathFromToolOutput(output)).toBe('/Users/haoqing/Library/Application Support/omagtgt/default_working_dir/slide2.html');
+    const output = 'The file /Users/haoqing/Library/Application Support/deskwandgt/default_working_dir/slide2.html has been updated successfully.';
+    expect(extractFilePathFromToolOutput(output)).toBe('/Users/haoqing/Library/Application Support/deskwandgt/default_working_dir/slide2.html');
   });
 
   it('extracts screenshot path from wrapped screenshot output', () => {

@@ -50,7 +50,7 @@ describe('api config state helpers', () => {
           updatedAt: '2026-05-24T00:00:00.000Z',
         },
       },
-      omagtCodePath: '',
+      deskwandCodePath: '',
       defaultWorkdir: '',
       globalSkillsPath: '',
       theme: 'light',

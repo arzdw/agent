@@ -11,7 +11,7 @@ const mockConfigState = vi.hoisted(() => ({
     activeProviderKey: "openrouter",
     profiles: {},
     providers: {},
-    omagtCodePath: "",
+    deskwandCodePath: "",
     defaultWorkdir: "",
     enableDevLogs: false,
     theme: "light",
@@ -47,7 +47,7 @@ vi.mock("electron", () => ({
     isPackaged: false,
     getPath: () => "/tmp",
     getVersion: () => "0.0.0-test",
-    getAppPath: () => "/tmp/omagt-test-app",
+    getAppPath: () => "/tmp/deskwand-test-app",
   },
 }));
 
@@ -184,7 +184,7 @@ function createSchema(db: Database.Database): void {
     CREATE TABLE sessions (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
-      omagt_session_id TEXT,
+      deskwand_session_id TEXT,
       openai_thread_id TEXT,
       status TEXT NOT NULL,
       cwd TEXT,
@@ -275,7 +275,7 @@ function insertSession(
   db.prepare(
     `
       INSERT INTO sessions (
-        id, title, omagt_session_id, openai_thread_id, status, cwd, mounted_paths, allowed_tools,
+        id, title, deskwand_session_id, openai_thread_id, status, cwd, mounted_paths, allowed_tools,
         memory_enabled, model, created_at, updated_at
       ) VALUES (?, ?, NULL, NULL, 'idle', ?, '[]', '[]', ?, NULL, ?, ?)
     `,
@@ -348,7 +348,7 @@ describe("MemoryService", () => {
   let storageRoot: string;
 
   beforeEach(() => {
-    storageRoot = fs.mkdtempSync(path.join(os.tmpdir(), "omagt-memory-"));
+    storageRoot = fs.mkdtempSync(path.join(os.tmpdir(), "deskwand-memory-"));
     rawDb = new Database(":memory:");
     createSchema(rawDb);
     db = createDatabaseInstance(rawDb);
@@ -683,7 +683,7 @@ describe("MemoryService", () => {
     });
 
     const outsideDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "omagt-memory-outside-"),
+      path.join(os.tmpdir(), "deskwand-memory-outside-"),
     );
     const outsideFile = path.join(outsideDir, "secret.json");
     fs.writeFileSync(outsideFile, '{"secret":true}', "utf8");
@@ -704,7 +704,7 @@ describe("MemoryService", () => {
 
   it("rejects arbitrary local files even if storageRoot is configured too broadly", () => {
     const outsideDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "omagt-memory-broad-root-"),
+      path.join(os.tmpdir(), "deskwand-memory-broad-root-"),
     );
     const outsideFile = path.join(outsideDir, "arbitrary.json");
     fs.writeFileSync(outsideFile, '{"secret":true}', "utf8");
@@ -742,7 +742,7 @@ describe("MemoryService", () => {
 
   it("rejects evalArtifactsRoot values that escape storageRoot before rebuildAll can delete them", async () => {
     const outsideDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "omagt-memory-artifacts-escape-"),
+      path.join(os.tmpdir(), "deskwand-memory-artifacts-escape-"),
     );
     const markerFile = path.join(outsideDir, "keep.txt");
     fs.writeFileSync(markerFile, "keep-me", "utf8");
@@ -782,7 +782,7 @@ describe("MemoryService", () => {
 
   it("rejects readFile when evalArtifactsRoot escapes storageRoot", () => {
     const outsideDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "omagt-memory-artifacts-read-"),
+      path.join(os.tmpdir(), "deskwand-memory-artifacts-read-"),
     );
     const outsideFile = path.join(outsideDir, "secret.json");
     fs.writeFileSync(outsideFile, '{"secret":true}', "utf8");
@@ -821,7 +821,7 @@ describe("MemoryService", () => {
 
   it("rejects readFile when evalArtifactsRoot is a filesystem root", () => {
     const outsideDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "omagt-memory-artifacts-root-"),
+      path.join(os.tmpdir(), "deskwand-memory-artifacts-root-"),
     );
     const outsideFile = path.join(outsideDir, "secret.json");
     fs.writeFileSync(outsideFile, '{"secret":true}', "utf8");
@@ -860,7 +860,7 @@ describe("MemoryService", () => {
 
   it("rejects readFile when evalArtifactsRoot is a symlink escaping storageRoot", () => {
     const outsideDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "omagt-memory-artifacts-link-target-"),
+      path.join(os.tmpdir(), "deskwand-memory-artifacts-link-target-"),
     );
     const outsideFile = path.join(outsideDir, "secret.json");
     fs.writeFileSync(outsideFile, '{"secret":true}', "utf8");
@@ -904,7 +904,7 @@ describe("MemoryService", () => {
 
   it("rejects non-existent evalArtifactsRoot paths under escaping symlinks before creating directories", () => {
     const outsideDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "omagt-memory-artifacts-link-parent-"),
+      path.join(os.tmpdir(), "deskwand-memory-artifacts-link-parent-"),
     );
     const outsideArtifactsDir = path.join(outsideDir, "new-artifacts");
 

@@ -13,7 +13,7 @@ describe("skill-usage-tracker", () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = fs.mkdtempSync(path.join(os.tmpdir(), "omagt-usage-"));
+    testDir = fs.mkdtempSync(path.join(os.tmpdir(), "deskwand-usage-"));
   });
 
   afterEach(() => {

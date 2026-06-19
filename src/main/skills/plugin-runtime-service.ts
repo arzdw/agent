@@ -99,9 +99,9 @@ export class PluginRuntimeService {
 
   private getPiPkgMgr(): DefaultPackageManager {
     if (!this.piPkgMgr) {
-      // Use ~/.omagt so pi reads/writes settings.json + npm packages there,
+      // Use ~/.deskwand so pi reads/writes settings.json + npm packages there,
       // consistent with agent-runner's ResourceLoader.
-      const agentDir = path.join(app.getPath("home"), ".omagt");
+      const agentDir = path.join(app.getPath("home"), ".deskwand");
       const settingsMgr = SettingsManager.create(process.cwd(), agentDir);
       this.piPkgMgr = new DefaultPackageManager({
         cwd: process.cwd(),
@@ -163,7 +163,7 @@ export class PluginRuntimeService {
     // This ensures reload() discovers the package and jiti alias resolves correctly.
     await pkgMgr.installAndPersist(source);
 
-    // Read installed path from pi's npm directory (~/.omagt/npm/node_modules/…)
+    // Read installed path from pi's npm directory (~/.deskwand/npm/node_modules/…)
     const installedPath = pkgMgr.getInstalledPath(source, "user");
     if (!installedPath || !fs.existsSync(installedPath)) {
       throw new Error(`Failed to locate installed path for ${name}.`);
@@ -332,7 +332,7 @@ export class PluginRuntimeService {
     }
 
     try {
-      const agentDir = path.join(app.getPath("home"), ".omagt");
+      const agentDir = path.join(app.getPath("home"), ".deskwand");
       const resourceLoader = new DefaultResourceLoader({
         cwd: process.cwd(),
         agentDir,
@@ -420,7 +420,7 @@ export class PluginRuntimeService {
         /* ignore malformed package.json */
       }
     }
-    // 2. omagt manifest (.omagt-plugin/plugin.json)
+    // 2. deskwand manifest (.deskwand-plugin/plugin.json)
     if (typeof manifest?.extensions === "string") return 1;
     if (Array.isArray(manifest?.extensions)) return manifest.extensions.length;
     // 3. Fallback: scan extensions/ directory

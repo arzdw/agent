@@ -57,7 +57,7 @@ class MockTray {
 
 export const app = {
   isPackaged: false,
-  name: 'omagt-test',
+  name: 'deskwand-test',
   commandLine: {
     appendSwitch: noop,
   },
@@ -66,9 +66,9 @@ export const app = {
   },
   disableHardwareAcceleration: noop,
   requestSingleInstanceLock: () => true,
-  getPath: (_name: string) => '/tmp/omagt-test',
+  getPath: (_name: string) => '/tmp/deskwand-test',
   getVersion: () => '0.0.0-test',
-  getName: () => 'omagt-test',
+  getName: () => 'deskwand-test',
   getLocale: () => 'en',
   getAppPath: () => process.cwd(),
   whenReady: () => Promise.resolve(),

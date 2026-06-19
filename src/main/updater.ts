@@ -1,7 +1,7 @@
 /**
- * Auto-updater module for OMAGT.
+ * Auto-updater module for Deskwand.
  *
- * Configured for generic provider at https://file.omagt.com.
+ * Configured for generic provider at https://file.deskwand.com.
  * Per karpathy-guidelines: self-contained, single responsibility,
  * event listeners only (no IPC/UI — those are later steps).
  */
@@ -17,7 +17,7 @@ export function initUpdater(
   // Ensure the feed URL is always set, even if build-time publish config is missing
   autoUpdater.setFeedURL({
     provider: "generic",
-    url: "https://file.omagt.com",
+    url: "https://file.deskwand.com",
   });
 
   autoUpdater.forceDevUpdateConfig = true;

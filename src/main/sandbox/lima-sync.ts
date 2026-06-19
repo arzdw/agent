@@ -2,7 +2,7 @@
  * LimaSync - Manages file synchronization between macOS and Lima sandbox
  *
  * This module provides complete isolation by:
- * 1. Copying files from macOS to an isolated Lima directory (~/.omagt/sandbox/{sessionId})
+ * 1. Copying files from macOS to an isolated Lima directory (~/.deskwand/sandbox/{sessionId})
  * 2. Running all operations within the isolated directory
  * 3. Syncing changes back to macOS when requested
  *
@@ -17,7 +17,7 @@
 import { log, logError } from "../utils/logger";
 import { isPathWithinRoot } from "../tools/path-containment";
 
-const LIMA_INSTANCE_NAME = "omagt-sandbox";
+const LIMA_INSTANCE_NAME = "deskwand-sandbox";
 
 /** Validate sessionId to prevent command injection via path traversal */
 function validateSessionId(sessionId: string): void {
@@ -29,7 +29,7 @@ function validateSessionId(sessionId: string): void {
 export interface LimaSyncSession {
   sessionId: string;
   macPath: string; // Original macOS path (e.g., /Users/username/project)
-  sandboxPath: string; // Lima sandbox path (e.g., ~/.omagt/sandbox/{sessionId})
+  sandboxPath: string; // Lima sandbox path (e.g., ~/.deskwand/sandbox/{sessionId})
   initialized: boolean;
   fileCount?: number;
   totalSize?: number;
@@ -123,7 +123,7 @@ export class LimaSync {
     // Get the actual home directory path from Lima
     const homeResult = await this.limaExec("cd ~ && pwd");
     const homeDir = homeResult.stdout.trim() || "/home/user";
-    const sandboxPath = `${homeDir}/.omagt/sandbox/${sessionId}`;
+    const sandboxPath = `${homeDir}/.deskwand/sandbox/${sessionId}`;
     log(`[LimaSync]   Sandbox path: ${sandboxPath}`);
 
     try {

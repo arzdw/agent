@@ -33,7 +33,7 @@ function createConfig(): AppConfig {
         updatedAt: '2026-05-24T00:00:00.000Z',
       },
     },
-    omagtCodePath: '',
+    deskwandCodePath: '',
     defaultWorkdir: '',
     globalSkillsPath: '',
     enableDevLogs: true,
@@ -117,11 +117,11 @@ describe('runConfigApiTest', () => {
     expect(mocks.probeWithAgentSdk).toHaveBeenCalledTimes(1);
   });
 
-  it('returns failure when Omagt Agent executable is not found', async () => {
+  it('returns failure when Deskwand Agent executable is not found', async () => {
     const probeFailure: ApiTestResult = {
       ok: false,
       errorType: 'unknown',
-      details: 'Omagt Agent executable not found. Please install @anthropic-ai/omagt-code',
+      details: 'Deskwand Agent executable not found. Please install @anthropic-ai/deskwand-code',
     };
     mocks.probeWithAgentSdk.mockResolvedValue(probeFailure);
 

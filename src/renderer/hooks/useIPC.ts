@@ -173,7 +173,7 @@ export function useIPC() {
                       store.setSessionContextWindow(sessionId, cw);
                   }
                 }
-                const lastId = localStorage.getItem("omagt.lastSessionId");
+                const lastId = localStorage.getItem("deskwand.lastSessionId");
                 if (
                   lastId &&
                   event.payload.sessions.some((s) => s.id === lastId)

@@ -17,12 +17,12 @@ let logInitialized = false;
 
 /**
  * Get the application's log directory
- * Uses ~/.omagt/logs to match the main application's userData path.
+ * Uses ~/.deskwand/logs to match the main application's userData path.
  */
 function getLogsDirectory(): string {
   if (logsDir) return logsDir;
 
-  logsDir = path.join(os.homedir(), ".omagt", "logs");
+  logsDir = path.join(os.homedir(), ".deskwand", "logs");
 
   // Ensure logs directory exists (sync for initialization)
   try {

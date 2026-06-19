@@ -58,10 +58,10 @@ describe("initUpdater", () => {
 
   // ── Configuration ──
 
-  it("sets the feed URL to file.omagt.com", () => {
+  it("sets the feed URL to file.deskwand.com", () => {
     expect(mockAutoUpdater.setFeedURL).toHaveBeenCalledWith({
       provider: "generic",
-      url: "https://file.omagt.com",
+      url: "https://file.deskwand.com",
     });
   });
 

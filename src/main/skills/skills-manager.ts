@@ -4,7 +4,7 @@
  * Skill discovery and lifecycle (999 lines).
  *
  * Responsibilities:
- * - Discovers built-in skills from .omagt/skills/ directories
+ * - Discovers built-in skills from .deskwand/skills/ directories
  * - Parses SKILL.md front-matter for metadata (name, description, triggers)
  * - Plugin install/uninstall from npm-style package specs
  *
@@ -86,7 +86,7 @@ interface SkillsManagerOptions {
  *
  * Skills loading priority:
  * 1. Project-level: <project>/.skills/ or <project>/skills/
- * 2. Global: <userData>/skills/ (includes ~/.omagt/skills read-only)
+ * 2. Global: <userData>/skills/ (includes ~/.deskwand/skills read-only)
  * 3. Built-in skills
  */
 export class SkillsManager {
@@ -105,7 +105,7 @@ export class SkillsManager {
    * Load built-in skills
    */
   private loadBuiltinSkills(): void {
-    // Load skills from .omagt/skills directory (like pdf, xlsx, docx, pptx)
+    // Load skills from .deskwand/skills directory (like pdf, xlsx, docx, pptx)
     const builtinSkillsPath = this.getBuiltinSkillsPath();
     if (builtinSkillsPath) {
       try {
@@ -154,7 +154,7 @@ export class SkillsManager {
           log(`Loaded built-in skill: ${skill.name}`);
         }
       } catch (error) {
-        logError("Failed to load built-in skills from .omagt/skills:", error);
+        logError("Failed to load built-in skills from .deskwand/skills:", error);
       }
     }
   }
@@ -168,15 +168,15 @@ export class SkillsManager {
 
     const possiblePaths = [
       // Development
-      path.join(__dirname, "..", "..", "..", ".omagt", "skills"),
-      // Production: extraResources extracts .omagt/skills → resources/skills
+      path.join(__dirname, "..", "..", "..", ".deskwand", "skills"),
+      // Production: extraResources extracts .deskwand/skills → resources/skills
       path.join(process.resourcesPath || "", "skills"),
       // Legacy: in app.asar.unpacked (for older builds with asarUnpack)
-      ...(this.physicalDirExists(path.join(unpackedPath, ".omagt", "skills"))
-        ? [path.join(unpackedPath, ".omagt", "skills")]
+      ...(this.physicalDirExists(path.join(unpackedPath, ".deskwand", "skills"))
+        ? [path.join(unpackedPath, ".deskwand", "skills")]
         : []),
       // Last resort: read from inside the asar archive (Electron intercepts this)
-      path.join(appPath, ".omagt", "skills"),
+      path.join(appPath, ".deskwand", "skills"),
     ];
 
     for (const p of possiblePaths) {
@@ -206,7 +206,7 @@ export class SkillsManager {
   }
 
   private getDefaultGlobalSkillsPath(): string {
-    return path.join(app.getPath("home"), ".omagt", "skills");
+    return path.join(app.getPath("home"), ".deskwand", "skills");
   }
 
   getGlobalSkillsPath(): string {
@@ -253,7 +253,7 @@ export class SkillsManager {
   }
 
   private getUserSkillsPath(): string {
-    return path.join(app.getPath("home"), ".omagt", "skills");
+    return path.join(app.getPath("home"), ".deskwand", "skills");
   }
 
   private async importUserSkills(globalSkillsPath: string): Promise<void> {
@@ -938,7 +938,7 @@ export class SkillsManager {
 
     const pluginJsonPath = path.join(
       pluginRootPath,
-      ".omagt-plugin",
+      ".deskwand-plugin",
       "plugin.json",
     );
     let pluginName = path.basename(pluginRootPath);

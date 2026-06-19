@@ -10,7 +10,7 @@
  *
  * Features:
  * - File system operations (create, read, modify, delete)
- * - Integration with Omagt Agent for AI-assisted development
+ * - Integration with Deskwand Agent for AI-assisted development
  * - Test execution (unit, integration, e2e)
  * - Requirement tracking and validation
  * - Git integration for version control
@@ -896,7 +896,7 @@ async function callVisionAPI(
   );
   const baseUrl = process.env.ANTHROPIC_BASE_URL || process.env.OPENAI_BASE_URL;
   const model =
-    process.env.OMAGT_MODEL ||
+    process.env.DESKWAND_MODEL ||
     process.env.ANTHROPIC_DEFAULT_SONNET_MODEL ||
     process.env.OPENAI_MODEL ||
     "claude-sonnet-4-6";
@@ -985,8 +985,8 @@ async function callVisionAPI(
     };
 
     if (isOpenRouter) {
-      headers["HTTP-Referer"] = "https://github.com/omagent/agent";
-      headers["X-Title"] = "OMAGT";
+      headers["HTTP-Referer"] = "https://github.com/deskwand/agent";
+      headers["X-Title"] = "Deskwand";
     }
 
     return new Promise<string>((resolve, reject) => {
@@ -2432,21 +2432,21 @@ async function executeGUIInteraction(
 //   }
 // }
 
-// Helper: Execute Omagt Agent command
+// Helper: Execute Deskwand Agent command
 // @ts-expect-error - Reserved for future use
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function executeOmagtCode(
+async function executeDeskwandCode(
   prompt: string,
   workingDir: string = WORKSPACE_DIR,
 ): Promise<string> {
   try {
-    // Check if omagt-code is available
-    const omagtCodePath = process.env.OMAGT_CODE_PATH || "omagt-code";
+    // Check if deskwand-code is available
+    const deskwandCodePath = process.env.DESKWAND_CODE_PATH || "deskwand-code";
 
-    // Execute omagt-code with the prompt
+    // Execute deskwand-code with the prompt
     const { stdout, stderr } = await execFileAsync(
       "bash",
-      ["-c", `${omagtCodePath} "${prompt.replace(/"/g, '\\"')}"`],
+      ["-c", `${deskwandCodePath} "${prompt.replace(/"/g, '\\"')}"`],
       {
         cwd: workingDir,
         maxBuffer: 10 * 1024 * 1024, // 10MB buffer
@@ -2455,17 +2455,17 @@ async function executeOmagtCode(
     );
 
     if (stderr && !stderr.includes("Warning")) {
-      writeMCPLog("[OmagtCode] stderr:", stderr);
+      writeMCPLog("[DeskwandCode] stderr:", stderr);
     }
 
     return stdout || stderr || "Command executed successfully";
   } catch (error: unknown) {
     writeMCPLog(
-      "[OmagtCode] Error:",
+      "[DeskwandCode] Error:",
       error instanceof Error ? error.message : String(error),
     );
     throw new Error(
-      `Omagt Agent execution failed: ${error instanceof Error ? error.message : String(error)}`,
+      `Deskwand Agent execution failed: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -3578,7 +3578,7 @@ async function main() {
   writeMCPLog("=".repeat(60));
   writeMCPLog(`Workspace: ${WORKSPACE_DIR}`);
   writeMCPLog(
-    `Omagt Agent: ${process.env.OMAGT_CODE_PATH || "omagt-code (from PATH)"}`,
+    `Deskwand Agent: ${process.env.DESKWAND_CODE_PATH || "deskwand-code (from PATH)"}`,
   );
   writeMCPLog("");
   writeMCPLog("Available Tools:");

@@ -723,23 +723,23 @@ ${hints.join("\n")}
    * Get the built-in skills directory (shipped with the app)
    */
   private getBuiltinSkillsPath(): string {
-    // In development, skills are in the project's .omagt/skills directory
+    // In development, skills are in the project's .deskwand/skills directory
     // In production, they're extracted via extraResources to resources/skills
     const appPath = app.getAppPath();
     const unpackedPath = appPath.replace(/\.asar$/, ".asar.unpacked");
 
     const possiblePaths = [
       // Development: relative to this file
-      path.join(__dirname, "..", "..", "..", ".omagt", "skills"),
-      // Production: extraResources extracts .omagt/skills → resources/skills
+      path.join(__dirname, "..", "..", "..", ".deskwand", "skills"),
+      // Production: extraResources extracts .deskwand/skills → resources/skills
       // This is the preferred production path (real directory, no asar issues)
       path.join(process.resourcesPath || "", "skills"),
       // Legacy: in app.asar.unpacked (for older builds with asarUnpack)
-      ...(this.physicalDirExists(path.join(unpackedPath, ".omagt", "skills"))
-        ? [path.join(unpackedPath, ".omagt", "skills")]
+      ...(this.physicalDirExists(path.join(unpackedPath, ".deskwand", "skills"))
+        ? [path.join(unpackedPath, ".deskwand", "skills")]
         : []),
       // Last resort: read from inside the asar archive (Electron intercepts this)
-      path.join(appPath, ".omagt", "skills"),
+      path.join(appPath, ".deskwand", "skills"),
     ];
 
     for (const p of possiblePaths) {
@@ -770,20 +770,20 @@ ${hints.join("\n")}
     }
   }
 
-  private getAppOmagtDir(): string {
+  private getAppDeskwandDir(): string {
     return app.getPath("userData");
   }
 
   private getRuntimeSkillsDir(): string {
-    return path.join(app.getPath("home"), ".omagt", "skills");
+    return path.join(app.getPath("home"), ".deskwand", "skills");
   }
 
-  private getUserOmagtSkillsDir(): string {
-    return path.join(app.getPath("home"), ".omagt", "skills");
+  private getUserDeskwandSkillsDir(): string {
+    return path.join(app.getPath("home"), ".deskwand", "skills");
   }
 
   private syncUserSkillsToAppDir(appSkillsDir: string): void {
-    const userSkillsDir = this.getUserOmagtSkillsDir();
+    const userSkillsDir = this.getUserDeskwandSkillsDir();
     if (!fs.existsSync(userSkillsDir)) {
       return;
     }
@@ -1223,7 +1223,7 @@ ${hints.join("\n")}
                 fuzzy(inp.name, sel) ||
                 fuzzy(inp.id, sel)
               ) {
-                el.setAttribute("data-omagt-type-target", "1");
+                el.setAttribute("data-deskwand-type-target", "1");
                 return true;
               }
             }
@@ -1236,7 +1236,7 @@ ${hints.join("\n")}
               if (targetId) {
                 const target = document.getElementById(targetId);
                 if (target && candidates.includes(target as HTMLElement)) {
-                  target.setAttribute("data-omagt-type-target", "1");
+                  target.setAttribute("data-deskwand-type-target", "1");
                   return true;
                 }
               }
@@ -1245,7 +1245,7 @@ ${hints.join("\n")}
                 "input, textarea, [contenteditable]",
               );
               if (wrapped) {
-                wrapped.setAttribute("data-omagt-type-target", "1");
+                wrapped.setAttribute("data-deskwand-type-target", "1");
                 return true;
               }
             }
@@ -1253,7 +1253,7 @@ ${hints.join("\n")}
             return false;
           }, selector);
 
-          if (resolved) return "[data-omagt-type-target]";
+          if (resolved) return "[data-deskwand-type-target]";
           throw new Error(`No input element found matching "${selector}"`);
         };
         const sel = await getSelector();
@@ -1261,7 +1261,7 @@ ${hints.join("\n")}
           await page.evaluate((s: string) => {
             const el = document.querySelector(s);
             if (el instanceof HTMLElement) {
-              el.removeAttribute("data-omagt-type-target");
+              el.removeAttribute("data-deskwand-type-target");
               el.focus();
               if (
                 el instanceof HTMLInputElement ||
@@ -1282,8 +1282,8 @@ ${hints.join("\n")}
           // to prevent stale selectors on the next typeTool call.
           await page
             .evaluate(() => {
-              const marked = document.querySelector("[data-omagt-type-target]");
-              if (marked) marked.removeAttribute("data-omagt-type-target");
+              const marked = document.querySelector("[data-deskwand-type-target]");
+              if (marked) marked.removeAttribute("data-deskwand-type-target");
             })
             .catch(() => {
               /* best-effort */
@@ -1854,13 +1854,13 @@ ${hints.join("\n")}
             });
           }
 
-          // Copy skills to sandbox ~/.omagt/skills/
+          // Copy skills to sandbox ~/.deskwand/skills/
           const builtinSkillsPath = this.getBuiltinSkillsPath();
           try {
             const distro = sandbox.wslStatus!.distro!;
-            const sandboxSkillsPath = `${sandboxPath}/.omagt/skills`;
+            const sandboxSkillsPath = `${sandboxPath}/.deskwand/skills`;
 
-            // Create .omagt/skills directory in sandbox
+            // Create .deskwand/skills directory in sandbox
             execFileSync(
               "wsl",
               ["-d", distro, "-e", "mkdir", "-p", sandboxSkillsPath],
@@ -2025,17 +2025,17 @@ ${hints.join("\n")}
             });
           }
 
-          // Copy skills to sandbox ~/.omagt/skills/
+          // Copy skills to sandbox ~/.deskwand/skills/
           const builtinSkillsPath = this.getBuiltinSkillsPath();
           try {
-            const sandboxSkillsPath = `${sandboxPath}/.omagt/skills`;
+            const sandboxSkillsPath = `${sandboxPath}/.deskwand/skills`;
 
-            // Create .omagt/skills directory in sandbox
+            // Create .deskwand/skills directory in sandbox
             execFileSync(
               "limactl",
               [
                 "shell",
-                "omagt-sandbox",
+                "deskwand-sandbox",
                 "--",
                 "mkdir",
                 "-p",
@@ -2058,7 +2058,7 @@ ${hints.join("\n")}
                 "limactl",
                 [
                   "shell",
-                  "omagt-sandbox",
+                  "deskwand-sandbox",
                   "--",
                   "rsync",
                   "-av",
@@ -2087,7 +2087,7 @@ ${hints.join("\n")}
                 "limactl",
                 [
                   "shell",
-                  "omagt-sandbox",
+                  "deskwand-sandbox",
                   "--",
                   "rsync",
                   "-avL",
@@ -2104,7 +2104,7 @@ ${hints.join("\n")}
             // List copied skills for verification
             const copiedSkills = execFileSync(
               "limactl",
-              ["shell", "omagt-sandbox", "--", "ls", sandboxSkillsPath],
+              ["shell", "deskwand-sandbox", "--", "ls", sandboxSkillsPath],
               {
                 encoding: "utf-8",
                 timeout: 10000,
@@ -2275,9 +2275,9 @@ ${hints.join("\n")}
           ? sandboxPath
           : workingDir || process.cwd();
 
-      // Use app-specific Omagt config directory to avoid conflicts with user settings
-      // SDK uses OMAGT_CONFIG_DIR to locate skills
-      const userOmagtDir = this.getAppOmagtDir();
+      // Use app-specific Deskwand config directory to avoid conflicts with user settings
+      // SDK uses Deskwand_CONFIG_DIR to locate skills
+      const userDeskwandDir = this.getAppDeskwandDir();
 
       // Skills directory setup: only run on the first query per runner instance.
       // Symlinks and directories are stable across queries; re-running every time
@@ -2287,18 +2287,18 @@ ${hints.join("\n")}
         // Set flag at start to prevent re-entrant calls from concurrent queries
         this._skillsSetupDone = true;
 
-        // Ensure app Omagt config directory exists
-        if (!fs.existsSync(userOmagtDir)) {
-          fs.mkdirSync(userOmagtDir, { recursive: true });
+        // Ensure app Deskwand config directory exists
+        if (!fs.existsSync(userDeskwandDir)) {
+          fs.mkdirSync(userDeskwandDir, { recursive: true });
         }
 
-        // Ensure app Omagt skills directory exists
+        // Ensure app Deskwand skills directory exists
         const appSkillsDir = this.getRuntimeSkillsDir();
         if (!fs.existsSync(appSkillsDir)) {
           fs.mkdirSync(appSkillsDir, { recursive: true });
         }
 
-        // Copy built-in skills to app Omagt skills directory if they don't exist
+        // Copy built-in skills to app Deskwand skills directory if they don't exist
         const builtinSkillsPath = this.getBuiltinSkillsPath();
         if (builtinSkillsPath && fs.existsSync(builtinSkillsPath)) {
           // Symlinks into .asar archives don't work at the OS level (ENOTDIR),
@@ -2360,7 +2360,7 @@ ${hints.join("\n")}
       // Build available skills section dynamically — now handled by pi's DefaultResourceLoader
       // via additionalSkillPaths. No custom prompt building needed.
 
-      log("[AgentRunner] App omagt dir:", userOmagtDir);
+      log("[AgentRunner] App deskwand dir:", userDeskwandDir);
       log("[AgentRunner] User working directory:", workingDir);
 
       logTiming("before building conversation context", runStartTime);
@@ -2740,7 +2740,7 @@ This is an isolated sandbox environment. Use ${VIRTUAL_WORKSPACE_PATH} as the ro
             : "";
 
       const coworkAppendPrompt = [
-        "You are an OMAGT assistant. Be concise, accurate, and tool-capable.",
+        "You are an Deskwand assistant. Be concise, accurate, and tool-capable.",
         `CRITICAL BEHAVIORAL RULES:\n
 1. CHAT FIRST: By default, respond to the user in plain text within the conversation. Do NOT create, write, or edit files unless the user explicitly asks you to (e.g., \"create a file\", \"write this to...\", \"edit the code\", \"save as...\", mentions a specific file path, or describes code changes they want applied). For questions, summaries, explanations, analysis, and general conversation — always reply directly in chat text.\n
 2. When a request is actionable, proceed immediately with reasonable assumptions. If you need clarification, ask briefly in plain text.\n
@@ -2749,7 +2749,7 @@ This is an isolated sandbox environment. Use ${VIRTUAL_WORKSPACE_PATH} as the ro
 5. When given a task, START DOING IT. Do not restate the task, do not list what you will do, do not ask for confirmation. Just execute.`,
         workspaceInfoPrompt,
         `\u003ccitation_requirements>\n
-If your answer uses linkable content from MCP tools, include a \"Sources:\" section and otherwise use standard Markdown links: [Title](https://omagt.ai/chat/URL).\n
+If your answer uses linkable content from MCP tools, include a \"Sources:\" section and otherwise use standard Markdown links: [Title](https://deskwand.ai/chat/URL).\n
 \u003c/citation_requirements>`,
         `\u003ctool_behavior\u003e\n
 Tool routing:\n
@@ -2902,7 +2902,7 @@ Tool routing:\n
           await import("@earendil-works/pi-coding-agent");
         const resourceLoader = new DefaultResourceLoader({
           cwd: effectiveCwd,
-          agentDir: userOmagtDir,
+          agentDir: userDeskwandDir,
           additionalSkillPaths: skillPaths,
           appendSystemPrompt: coworkAppendPrompt,
         });
@@ -3573,7 +3573,7 @@ Tool routing:\n
 
         // Try extension command interception with the raw user prompt.
         // The pi SDK's _tryExecuteExtensionCommand checks text.startsWith("/"),
-        // but omagt wraps the prompt with history/preamble (contextualPrompt),
+        // but deskwand wraps the prompt with history/preamble (contextualPrompt),
         // which would prevent the SDK from recognizing slash commands.
         // So we detect extension commands here and pass the raw prompt.
         //

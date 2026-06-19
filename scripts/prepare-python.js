@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Prepare a bundled Python runtime for OMAGT (macOS/Linux).
+ * Prepare a bundled Python runtime for Deskwand (macOS/Linux).
  *
  * Goal:
  * - Bundle a standalone python3 into `resources/python/darwin-{arch}/`
@@ -105,7 +105,7 @@ function download(url, dest) {
       url,
       {
         headers: {
-          'User-Agent': 'omagt-build-script',
+          'User-Agent': 'deskwand-build-script',
           Accept: '*/*',
         },
       },
@@ -147,7 +147,7 @@ function fetchJson(url) {
       url,
       {
         headers: {
-          'User-Agent': 'omagt-build-script',
+          'User-Agent': 'deskwand-build-script',
           Accept: 'application/vnd.github+json',
         },
       },

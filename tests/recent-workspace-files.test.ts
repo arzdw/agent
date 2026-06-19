@@ -8,7 +8,7 @@ describe('listRecentWorkspaceFiles', () => {
   let rootDir: string;
 
   beforeEach(async () => {
-    rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'omagt-recent-files-'));
+    rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'deskwand-recent-files-'));
   });
 
   afterEach(async () => {

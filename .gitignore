@@ -51,10 +51,10 @@ coverage/
 *.pem
 *.p12
 
-# Omagt 
-.omagt/*
-!.omagt/skills/
-OMAGT.md
+# Deskwand 
+.deskwand/*
+!.deskwand/skills/
+Deskwand.md
 
 
 # codex

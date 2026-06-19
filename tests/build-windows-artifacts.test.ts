@@ -26,10 +26,10 @@ describe('build-windows artifacts helper', () => {
     });
 
     expect(copiedPaths).toHaveLength(2);
-    expect(fs.existsSync(path.join(outputDir, 'OMAGT-Legacy-Cleanup.cmd'))).toBe(true);
-    expect(fs.existsSync(path.join(outputDir, 'OMAGT-Legacy-Cleanup.ps1'))).toBe(true);
+    expect(fs.existsSync(path.join(outputDir, 'Deskwand-Legacy-Cleanup.cmd'))).toBe(true);
+    expect(fs.existsSync(path.join(outputDir, 'Deskwand-Legacy-Cleanup.ps1'))).toBe(true);
 
-    const cmdContent = fs.readFileSync(path.join(outputDir, 'OMAGT-Legacy-Cleanup.cmd'), 'utf8');
+    const cmdContent = fs.readFileSync(path.join(outputDir, 'Deskwand-Legacy-Cleanup.cmd'), 'utf8');
     expect(cmdContent).toContain('ExecutionPolicy Bypass');
   });
 });

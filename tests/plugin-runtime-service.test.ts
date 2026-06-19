@@ -8,7 +8,7 @@ let testRoot = '';
 vi.mock('electron', () => {
   const electron = {
     app: {
-      getName: () => 'omagt-test',
+      getName: () => 'deskwand-test',
       getVersion: () => '0.0.0-test',
       getPath: (name: string) => {
         if (name === 'userData') return path.join(testRoot, 'userData');
@@ -33,9 +33,9 @@ vi.mock('../src/main/utils/logger', () => ({
 
 function createPluginFixture(root: string, pluginName: string): string {
   const pluginRoot = path.join(root, pluginName);
-  fs.mkdirSync(path.join(pluginRoot, '.omagt-plugin'), { recursive: true });
+  fs.mkdirSync(path.join(pluginRoot, '.deskwand-plugin'), { recursive: true });
   fs.writeFileSync(
-    path.join(pluginRoot, '.omagt-plugin', 'plugin.json'),
+    path.join(pluginRoot, '.deskwand-plugin', 'plugin.json'),
     JSON.stringify(
       {
         name: pluginName,
@@ -83,7 +83,7 @@ async function createRuntimeService(options?: { catalogService?: any; commandRun
 
 describe('PluginRuntimeService', () => {
   beforeEach(() => {
-    testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'omagt-plugin-runtime-'));
+    testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'deskwand-plugin-runtime-'));
     fs.mkdirSync(path.join(testRoot, 'userData'), { recursive: true });
     fs.mkdirSync(path.join(testRoot, 'temp'), { recursive: true });
     fs.mkdirSync(path.join(testRoot, 'home'), { recursive: true });

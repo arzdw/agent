@@ -16,7 +16,7 @@ class PluginRegistryStore {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- electron-store requires Record<string, any>
     const storeOptions: any = {
       name: "plugin-registry",
-      projectName: "omagt",
+      projectName: "deskwand",
       cwd: storeCwd,
       defaults: {
         plugins: [],
@@ -28,13 +28,13 @@ class PluginRegistryStore {
   }
 
   private resolveStoreCwd(): string {
-    // Always use ~/.omagt so the registry lives in the same place
+    // Always use ~/.deskwand so the registry lives in the same place
     // regardless of when app.setPath("userData", ...) runs.
     try {
       if (typeof app?.getPath === "function") {
         // app.getPath("home") is stable; app.getPath("userData") depends on
         // whether setPath has been called yet (module-level singleton issue).
-        return path.join(app.getPath("home"), ".omagt");
+        return path.join(app.getPath("home"), ".deskwand");
       }
     } catch {
       // test / non-Electron fallback

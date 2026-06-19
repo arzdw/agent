@@ -3,7 +3,7 @@
  *
  * Handles:
  * - WSL2 detection and initialization
- * - Node.js and omagt-code installation in WSL
+ * - Node.js and deskwand-code installation in WSL
  * - JSON-RPC communication with WSL agent
  * - Path conversion between Windows and WSL
  */
@@ -258,11 +258,11 @@ export class WSLBridge implements SandboxExecutor {
         }
       }
 
-      // Check if omagt-code is available
-      let omagtCodeAvailable = false;
+      // Check if deskwand-code is available
+      let deskwandCodeAvailable = false;
       if (nodeAvailable) {
         try {
-          const omagtResult = await execFileAsync(
+          const deskwandResult = await execFileAsync(
             "wsl",
             [
               "-d",
@@ -270,18 +270,18 @@ export class WSLBridge implements SandboxExecutor {
               "-e",
               "bash",
               "-c",
-              "source ~/.nvm/nvm.sh 2>/dev/null; which omagt && omagt --version",
+              "source ~/.nvm/nvm.sh 2>/dev/null; which deskwand && deskwand --version",
             ],
             { timeout: 10000, encoding: "utf-8" },
           );
-          const output = omagtResult.stdout.trim();
+          const output = deskwandResult.stdout.trim();
           if (output) {
-            omagtCodeAvailable = true;
-            log("[WSL] omagt-code found:", output);
+            deskwandCodeAvailable = true;
+            log("[WSL] deskwand-code found:", output);
           }
         } catch (error) {
-          log("[WSL] omagt-code not found");
-          omagtCodeAvailable = false;
+          log("[WSL] deskwand-code not found");
+          deskwandCodeAvailable = false;
         }
       }
 
@@ -326,7 +326,7 @@ export class WSLBridge implements SandboxExecutor {
         nodeAvailable,
         pythonAvailable,
         pipAvailable,
-        omagtCodeAvailable,
+        deskwandCodeAvailable,
         version: nodeVersion,
         pythonVersion,
       };
@@ -618,7 +618,7 @@ export class WSLBridge implements SandboxExecutor {
       );
       log("[WSL] Skill dependencies installed successfully");
     } catch (error) {
-      // Non-critical - Omagt can install packages on demand
+      // Non-critical - Deskwand can install packages on demand
       log(
         "[WSL] Failed to pre-install skill dependencies (will install on demand):",
         (error as Error).message,
@@ -693,15 +693,15 @@ export class WSLBridge implements SandboxExecutor {
   }
 
   /**
-   * Install omagt-code in WSL
+   * Install deskwand-code in WSL
    */
-  static async installOmagtCodeInWSL(distro: string): Promise<boolean> {
+  static async installDeskwandCodeInWSL(distro: string): Promise<boolean> {
     WSLBridge.validateDistroName(distro);
-    log("[WSL] Installing omagt-code in WSL...");
+    log("[WSL] Installing deskwand-code in WSL...");
 
     try {
       // Install with nvm environment (most common setup)
-      log("[WSL] Installing omagt-code via npm...");
+      log("[WSL] Installing deskwand-code via npm...");
       await execFileAsync(
         "wsl",
         [
@@ -710,7 +710,7 @@ export class WSLBridge implements SandboxExecutor {
           "-e",
           "bash",
           "-c",
-          "source ~/.nvm/nvm.sh 2>/dev/null; npm install -g @anthropic-ai/omagt-code",
+          "source ~/.nvm/nvm.sh 2>/dev/null; npm install -g @anthropic-ai/deskwand-code",
         ],
         { timeout: 180000, encoding: "utf-8" },
       );
@@ -724,20 +724,20 @@ export class WSLBridge implements SandboxExecutor {
           "-e",
           "bash",
           "-c",
-          "source ~/.nvm/nvm.sh 2>/dev/null; omagt --version",
+          "source ~/.nvm/nvm.sh 2>/dev/null; deskwand --version",
         ],
         { timeout: 10000, encoding: "utf-8" },
       );
 
       const version = verifyResult.stdout.trim();
-      log("[WSL] omagt-code installed:", version);
+      log("[WSL] deskwand-code installed:", version);
       return true;
     } catch (error) {
-      logError("[WSL] Failed to install omagt-code:", error);
+      logError("[WSL] Failed to install deskwand-code:", error);
 
       // Try with sudo as fallback (for system-installed node)
       try {
-        log("[WSL] Trying omagt-code install with sudo...");
+        log("[WSL] Trying deskwand-code install with sudo...");
         await execFileAsync(
           "wsl",
           [
@@ -748,13 +748,13 @@ export class WSLBridge implements SandboxExecutor {
             "npm",
             "install",
             "-g",
-            "@anthropic-ai/omagt-code",
+            "@anthropic-ai/deskwand-code",
           ],
           { timeout: 180000, encoding: "utf-8" },
         );
         return true;
       } catch (sudoError) {
-        logError("[WSL] Failed to install omagt-code with sudo:", sudoError);
+        logError("[WSL] Failed to install deskwand-code with sudo:", sudoError);
         return false;
       }
     }
@@ -840,9 +840,9 @@ export class WSLBridge implements SandboxExecutor {
       }
     }
 
-    if (!status.omagtCodeAvailable) {
+    if (!status.deskwandCodeAvailable) {
       log(
-        "[WSL] omagt-code not found in WSL (optional, Windows omagt-code will be used)",
+        "[WSL] deskwand-code not found in WSL (optional, Windows deskwand-code will be used)",
       );
     }
 
@@ -1174,9 +1174,9 @@ export class WSLBridge implements SandboxExecutor {
   }
 
   /**
-   * Run omagt-code in WSL
+   * Run deskwand-code in WSL
    */
-  async runOmagtCode(
+  async runDeskwandCode(
     prompt: string,
     options: {
       cwd?: string;
@@ -1194,12 +1194,12 @@ export class WSLBridge implements SandboxExecutor {
 
     // Streaming request support can be added here using uuidv4() for request tracking
 
-    // This returns an async iterable that yields omagt-code messages
+    // This returns an async iterable that yields deskwand-code messages
     // Implementation would involve streaming responses from the agent
     // For now, we use a simple request/response pattern
 
     const result = await this.sendRequest<{ messages: unknown[] }>(
-      "runOmagtCode",
+      "runDeskwandCode",
       {
         prompt,
         cwd: wslCwd,
@@ -1209,7 +1209,7 @@ export class WSLBridge implements SandboxExecutor {
         env: options.env,
       },
       300000,
-    ); // 5 minute timeout for omagt-code
+    ); // 5 minute timeout for deskwand-code
 
     // Convert to async iterable
     return (async function* () {

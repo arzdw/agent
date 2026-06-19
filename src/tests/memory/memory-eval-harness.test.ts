@@ -11,7 +11,7 @@ const mockConfigState = vi.hoisted(() => ({
     activeProviderKey: "openrouter",
     profiles: {},
     providers: {},
-    omagtCodePath: "",
+    deskwandCodePath: "",
     defaultWorkdir: "",
     enableDevLogs: false,
     theme: "light",
@@ -52,7 +52,7 @@ vi.mock("electron", () => ({
     isPackaged: false,
     getPath: () => "/tmp",
     getVersion: () => "0.0.0-test",
-    getAppPath: () => "/tmp/omagt-test-app",
+    getAppPath: () => "/tmp/deskwand-test-app",
   },
 }));
 
@@ -199,7 +199,7 @@ function createSchema(db: Database.Database): void {
     CREATE TABLE sessions (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
-      omagt_session_id TEXT,
+      deskwand_session_id TEXT,
       openai_thread_id TEXT,
       status TEXT NOT NULL,
       cwd TEXT,
@@ -283,7 +283,7 @@ describe("MemoryEvalHarness and MemoryPromptOptimizer", () => {
   const llm = new EvalMockLLM();
 
   beforeEach(() => {
-    tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "omagt-memory-eval-"));
+    tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "deskwand-memory-eval-"));
     rawDb = new Database(":memory:");
     createSchema(rawDb);
     service = new MemoryService(createDatabaseInstance(rawDb), {

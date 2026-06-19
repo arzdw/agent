@@ -14,7 +14,7 @@ let skillPatch: any;
 let skillAddReference: any;
 
 beforeEach(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "omagt-skill-write-tools-test-"));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "deskwand-skill-write-tools-test-"));
   const opts: SkillWriteToolsOptions = { globalSkillsPath: tmpDir };
   const tools = buildSkillWriteTools(opts);
   skillCreate = tools[0];

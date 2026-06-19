@@ -46,7 +46,7 @@ describe('SettingsPanel skills plugin browse entry', () => {
   });
 
   it('functional: handles marketplace catalog items with unknown component counts', () => {
-    expect(settingsPanelContent).toContain("plugin.catalogSource === 'omagt-marketplace'");
+    expect(settingsPanelContent).toContain("plugin.catalogSource === 'deskwand-marketplace'");
     expect(settingsPanelContent).toContain("t('skills.pluginComponentsAvailableAfterInstall')");
   });
 

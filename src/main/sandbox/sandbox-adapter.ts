@@ -201,8 +201,8 @@ export class SandboxAdapter implements SandboxExecutor {
         : "[X] not found",
     );
     log(
-      "[SandboxAdapter]   omagt-code:",
-      wslStatus.omagtCodeAvailable
+      "[SandboxAdapter]   deskwand-code:",
+      wslStatus.deskwandCodeAvailable
         ? "[OK] available"
         : "[!] not in WSL (using Windows)",
     );
@@ -231,11 +231,11 @@ export class SandboxAdapter implements SandboxExecutor {
       wslStatus.nodeAvailable = true;
     }
 
-    // omagt-code in WSL is NOT needed - we use Windows-side omagt-code
+    // deskwand-code in WSL is NOT needed - we use Windows-side deskwand-code
     // WSL sandbox is only for command execution (Bash, file operations)
-    if (!wslStatus.omagtCodeAvailable) {
+    if (!wslStatus.deskwandCodeAvailable) {
       log(
-        "[SandboxAdapter] omagt-code not in WSL (not needed - Windows omagt-code is used)",
+        "[SandboxAdapter] deskwand-code not in WSL (not needed - Windows deskwand-code is used)",
       );
     }
 
@@ -288,7 +288,7 @@ export class SandboxAdapter implements SandboxExecutor {
     log("[SandboxAdapter] [OK] Lima detected");
     log(
       "[SandboxAdapter]   Instance:",
-      limaStatus.instanceName || "omagt-sandbox",
+      limaStatus.instanceName || "deskwand-sandbox",
     );
     log(
       "[SandboxAdapter]   Exists:",
@@ -408,7 +408,7 @@ export class SandboxAdapter implements SandboxExecutor {
   }
 
   // @ts-expect-error Reserved for future use
-  private async _showOmagtCodeInstallPrompt(
+  private async _showDeskwandCodeInstallPrompt(
     config: SandboxAdapterConfig,
     distro: string,
   ): Promise<boolean> {
@@ -418,10 +418,10 @@ export class SandboxAdapter implements SandboxExecutor {
 
     const result = await dialog.showMessageBox(config.mainWindow, {
       type: "question",
-      title: "Install omagt-code in WSL",
-      message: `Omagt Agent is not installed in ${distro}.`,
+      title: "Install deskwand-code in WSL",
+      message: `Deskwand Agent is not installed in ${distro}.`,
       detail:
-        "Omagt Agent is required for AI agent functionality. " +
+        "Deskwand Agent is required for AI agent functionality. " +
         "Would you like to install it automatically?",
       buttons: ["Install", "Skip (use native execution)"],
       defaultId: 0,
@@ -716,12 +716,12 @@ export class SandboxAdapter implements SandboxExecutor {
     return resultPath;
   }
 
-  // ==================== Omagt Agent Integration ====================
+  // ==================== Deskwand Agent Integration ====================
 
   /**
-   * Run omagt-code in the sandbox
+   * Run deskwand-code in the sandbox
    */
-  async runOmagtCode(
+  async runDeskwandCode(
     prompt: string,
     options: {
       cwd?: string;
@@ -736,16 +736,16 @@ export class SandboxAdapter implements SandboxExecutor {
     }
 
     if (this.state.mode === "wsl" && this.executor instanceof WSLBridge) {
-      return (this.executor as WSLBridge).runOmagtCode(prompt, options);
+      return (this.executor as WSLBridge).runDeskwandCode(prompt, options);
     }
 
     if (this.state.mode === "lima" && this.executor instanceof LimaBridge) {
-      return (this.executor as LimaBridge).runOmagtCode(prompt, options);
+      return (this.executor as LimaBridge).runDeskwandCode(prompt, options);
     }
 
-    // For native mode, we need to spawn omagt-code directly
+    // For native mode, we need to spawn deskwand-code directly
     // This is a simplified implementation - full streaming would be more complex
-    throw new Error("Omagt Agent execution is only supported in WSL/Lima mode");
+    throw new Error("Deskwand Agent execution is only supported in WSL/Lima mode");
   }
 }
 

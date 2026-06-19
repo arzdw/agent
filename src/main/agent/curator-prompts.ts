@@ -8,7 +8,7 @@
  *   - CURATOR_REVIEW_PROMPT (lines 357-496)
  *
  * In Hermes, the curator uses skill_manage + skills_list + skill_view + terminal.
- * In omagt, the forked AgentRunner uses read + skill_patch + skill_create
+ * In deskwand, the forked AgentRunner uses read + skill_patch + skill_create
  * + skill_add_reference.
  */
 
@@ -92,10 +92,10 @@ not a reason to archive them — only age matters.
 
 ## DO NOT touch
 
-- Built-in skills (in the .omagt/skills/ bundled directory)
+- Built-in skills (in the .deskwand/skills/ bundled directory)
 - Skills that are NOT in the .agent-manifest.json (user-created)
 - Skills with pinned=true in .usage.json
-- Any file outside ~/.omagt/skills/
+- Any file outside ~/.deskwand/skills/
 
 ## Archival
 

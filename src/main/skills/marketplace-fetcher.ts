@@ -10,7 +10,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 export interface MarketplaceFetcher {
-  /** Unique source identifier, e.g. 'pi.dev' | 'omagt' */
+  /** Unique source identifier, e.g. 'pi.dev' | 'deskwand' */
   readonly source: string;
 
   /** Fetch the package catalog (first page by default). */
@@ -41,8 +41,8 @@ interface PiPackageRow {
 
 const PI_PACKAGES_URL = "https://pi.dev/packages";
 const PI_DETAIL_URL = "https://pi.dev/packages/";
-const PI_CACHE_TTL_MS = 5 * 60_000; // 5 min — npm packages update less often than Omagt plugins
-const PI_FETCH_USER_AGENT = "omagt-marketplace/1.0";
+const PI_CACHE_TTL_MS = 5 * 60_000; // 5 min — npm packages update less often than Deskwand plugins
+const PI_FETCH_USER_AGENT = "deskwand-marketplace/1.0";
 const EMPTY_COUNTS: PluginComponentCounts = {
   skills: 0,
   commands: 0,

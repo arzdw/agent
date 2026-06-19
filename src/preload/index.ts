@@ -357,7 +357,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
         pythonAvailable?: boolean;
         pythonVersion?: string;
         pipAvailable?: boolean;
-        omagtCodeAvailable?: boolean;
+        deskwandCodeAvailable?: boolean;
       };
       lima?: {
         available: boolean;
@@ -369,7 +369,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
         pythonAvailable?: boolean;
         pythonVersion?: string;
         pipAvailable?: boolean;
-        omagtCodeAvailable?: boolean;
+        deskwandCodeAvailable?: boolean;
       };
       error?: string;
     }> => ipcRenderer.invoke("sandbox.getStatus"),
@@ -381,7 +381,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
       pythonAvailable?: boolean;
       pythonVersion?: string;
       pipAvailable?: boolean;
-      omagtCodeAvailable?: boolean;
+      deskwandCodeAvailable?: boolean;
     }> => ipcRenderer.invoke("sandbox.checkWSL"),
     checkLima: (): Promise<{
       available: boolean;
@@ -393,7 +393,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
       pythonAvailable?: boolean;
       pythonVersion?: string;
       pipAvailable?: boolean;
-      omagtCodeAvailable?: boolean;
+      deskwandCodeAvailable?: boolean;
     }> => ipcRenderer.invoke("sandbox.checkLima"),
     installNodeInWSL: (distro: string): Promise<boolean> =>
       ipcRenderer.invoke("sandbox.installNodeInWSL", distro),
@@ -783,7 +783,7 @@ declare global {
             pythonAvailable?: boolean;
             pythonVersion?: string;
             pipAvailable?: boolean;
-            omagtCodeAvailable?: boolean;
+            deskwandCodeAvailable?: boolean;
           };
           lima?: {
             available: boolean;
@@ -795,7 +795,7 @@ declare global {
             pythonAvailable?: boolean;
             pythonVersion?: string;
             pipAvailable?: boolean;
-            omagtCodeAvailable?: boolean;
+            deskwandCodeAvailable?: boolean;
           };
           error?: string;
         }>;
@@ -807,7 +807,7 @@ declare global {
           pythonAvailable?: boolean;
           pythonVersion?: string;
           pipAvailable?: boolean;
-          omagtCodeAvailable?: boolean;
+          deskwandCodeAvailable?: boolean;
         }>;
         checkLima: () => Promise<{
           available: boolean;
@@ -819,7 +819,7 @@ declare global {
           pythonAvailable?: boolean;
           pythonVersion?: string;
           pipAvailable?: boolean;
-          omagtCodeAvailable?: boolean;
+          deskwandCodeAvailable?: boolean;
         }>;
         installNodeInWSL: (distro: string) => Promise<boolean>;
         installPythonInWSL: (distro: string) => Promise<boolean>;
