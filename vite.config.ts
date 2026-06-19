@@ -31,7 +31,6 @@ export default defineConfig({
             rollupOptions: {
               external: [
                 ...nodeBuiltins,
-                'better-sqlite3',
                 'bufferutil',
                 'utf-8-validate',
                 'electron',

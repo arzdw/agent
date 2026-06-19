@@ -936,10 +936,10 @@ app
       );
       try {
         // Verify critical native modules load
-        require("better-sqlite3");
-        log("[SmokeTest] better-sqlite3: OK");
+        require("node:sqlite");
+        log("[SmokeTest] node:sqlite: OK");
       } catch (e) {
-        log("[SmokeTest] FAIL: better-sqlite3 failed to load:", e);
+        log("[SmokeTest] FAIL: node:sqlite failed to load:", e);
         process.exit(1);
       }
       log("[SmokeTest] PASSED");

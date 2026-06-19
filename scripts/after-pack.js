@@ -7,7 +7,7 @@
  * Removes platform-specific binaries that don't match the build target,
  * strips build artifacts, and cleans up unnecessary locale files.
  *
- * Typical savings: ~160MB (koffi 79MB + better-sqlite3 19MB + ngrok 29MB + locales 32MB)
+ * Typical savings: ~140MB (koffi 79MB + ngrok 29MB + locales 32MB)
  */
 
 const fs = require('fs');
@@ -135,30 +135,7 @@ module.exports = async function afterPack(context) {
     }
   }
 
-  // --- 2. better-sqlite3: remove SQLite source and build intermediates ---
-  const sqlitePkg = path.join(nmUnpacked, 'better-sqlite3');
-  if (fs.existsSync(sqlitePkg)) {
-    // deps/sqlite3/ contains the SQLite amalgamation source (~9.7MB)
-    const depsDir = path.join(sqlitePkg, 'deps');
-    if (fs.existsSync(depsDir)) {
-      fs.rmSync(depsDir, { recursive: true, force: true });
-      console.log(`  ✓ better-sqlite3: removed deps/ (~9.7MB)`);
-    }
-    // build/Release/obj/ contains intermediate .o files (~9.6MB)
-    const objDir = path.join(sqlitePkg, 'build', 'Release', 'obj');
-    if (fs.existsSync(objDir)) {
-      fs.rmSync(objDir, { recursive: true, force: true });
-      console.log(`  ✓ better-sqlite3: removed build/Release/obj/ (~9.6MB)`);
-    }
-    // src/ contains C++ source files
-    const srcDir = path.join(sqlitePkg, 'src');
-    if (fs.existsSync(srcDir)) {
-      fs.rmSync(srcDir, { recursive: true, force: true });
-      console.log(`  ✓ better-sqlite3: removed src/`);
-    }
-  }
-
-  // --- 3. bufferutil / utf-8-validate: remove non-target platform prebuilds ---
+  // --- 2. bufferutil / utf-8-validate: remove non-target platform prebuilds ---
   for (const pkg of ['bufferutil', 'utf-8-validate']) {
     const pkgPath = path.join(nmUnpacked, pkg);
     if (!fs.existsSync(pkgPath)) continue;
@@ -170,7 +147,7 @@ module.exports = async function afterPack(context) {
     if (removed > 0) console.log(`  ✓ ${pkg}: kept ${keepDir}, removed ${removed} other prebuild dirs`);
   }
 
-  // --- 4. ngrok: remove binary (~28MB, it downloads on-demand anyway) ---
+  // --- 3. ngrok: remove binary (~28MB, it downloads on-demand anyway) ---
   const ngrokPkg = path.join(nmUnpacked, 'ngrok');
   if (fs.existsSync(ngrokPkg)) {
     const ngrokBin = path.join(ngrokPkg, 'bin');
@@ -180,7 +157,7 @@ module.exports = async function afterPack(context) {
     }
   }
 
-  // --- 5. Electron locales: keep only en, zh_CN, zh_TW ---
+  // --- 4. Electron locales: keep only en, zh_CN, zh_TW ---
   if (platform === 'darwin') {
     const appName = `${context.packager.appInfo.productFilename}.app`;
     const frameworkDir = path.join(
@@ -200,7 +177,7 @@ module.exports = async function afterPack(context) {
     }
   }
 
-  // --- 5b. Linux: trim Electron locale .pak files (~10MB) ---
+  // --- 4b. Linux: trim Electron locale .pak files (~10MB) ---
   if (platform === 'linux') {
     const localesDir = path.join(appOutDir, 'locales');
     if (fs.existsSync(localesDir)) {

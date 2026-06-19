@@ -27,8 +27,8 @@ function mockLogger(): void {
 }
 
 function mockBetterSqlite(): void {
-  vi.doMock('better-sqlite3', () => {
-    class MockDatabase {
+  vi.doMock('node:sqlite', () => {
+    class MockDatabaseSync {
       constructor(filePath: string) {
         const parentDir = path.dirname(filePath);
         if (!fs.existsSync(parentDir) || !fs.statSync(parentDir).isDirectory()) {
@@ -37,10 +37,6 @@ function mockBetterSqlite(): void {
         if (!fs.existsSync(filePath)) {
           fs.writeFileSync(filePath, '', 'utf8');
         }
-      }
-
-      pragma(): undefined {
-        return undefined;
       }
 
       exec(): void {}
@@ -56,7 +52,7 @@ function mockBetterSqlite(): void {
       close(): void {}
     }
 
-    return { default: MockDatabase };
+    return { DatabaseSync: MockDatabaseSync };
   });
 }
 

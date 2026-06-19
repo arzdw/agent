@@ -68,7 +68,7 @@ vi.mock("../../main/config/config-store", () => {
   };
 });
 
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -179,7 +179,7 @@ class MockMemoryLLMClient implements MemoryLLMClientLike {
   }
 }
 
-function createSchema(db: Database.Database): void {
+function createSchema(db: DatabaseSync): void {
   db.exec(`
     CREATE TABLE sessions (
       id TEXT PRIMARY KEY,
@@ -208,7 +208,7 @@ function createSchema(db: Database.Database): void {
   `);
 }
 
-function createDatabaseInstance(db: Database.Database): DatabaseInstance {
+function createDatabaseInstance(db: DatabaseSync): DatabaseInstance {
   return {
     raw: db,
     sessions: {
@@ -224,7 +224,7 @@ function createDatabaseInstance(db: Database.Database): DatabaseInstance {
         () =>
           db
             .prepare("SELECT * FROM sessions ORDER BY created_at ASC")
-            .all() as SessionRow[],
+            .all() as unknown as SessionRow[],
       ),
       delete: vi.fn(),
     },
@@ -237,7 +237,7 @@ function createDatabaseInstance(db: Database.Database): DatabaseInstance {
             .prepare(
               "SELECT * FROM messages WHERE session_id = ? ORDER BY timestamp ASC",
             )
-            .all(sessionId) as MessageRow[],
+            .all(sessionId) as unknown as MessageRow[],
       ),
       delete: vi.fn(),
       deleteBySessionId: vi.fn(),
@@ -257,13 +257,12 @@ function createDatabaseInstance(db: Database.Database): DatabaseInstance {
     },
     prepare: (sql: string) => db.prepare(sql),
     exec: (sql: string) => db.exec(sql),
-    pragma: (pragma: string) => db.pragma(pragma),
     close: () => db.close(),
   };
 }
 
 function insertSession(
-  db: Database.Database,
+  db: DatabaseSync,
   payload: {
     id: string;
     title: string;
@@ -290,7 +289,7 @@ function insertSession(
 }
 
 function insertMessage(
-  db: Database.Database,
+  db: DatabaseSync,
   payload: {
     id: string;
     sessionId: string;
@@ -342,14 +341,14 @@ function makeMessages(
 }
 
 describe("MemoryService", () => {
-  let rawDb: Database.Database;
+  let rawDb: DatabaseSync;
   let db: DatabaseInstance;
   let service: MemoryService;
   let storageRoot: string;
 
   beforeEach(() => {
     storageRoot = fs.mkdtempSync(path.join(os.tmpdir(), "deskwand-memory-"));
-    rawDb = new Database(":memory:");
+    rawDb = new DatabaseSync(":memory:");
     createSchema(rawDb);
     db = createDatabaseInstance(rawDb);
     service = new MemoryService(db, { llmClient: new MockMemoryLLMClient() });

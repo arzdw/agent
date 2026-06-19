@@ -1,9 +1,9 @@
 /**
- * SQLite database implementation using better-sqlite3
+ * SQLite database implementation using node:sqlite (Node.js built-in)
  * Provides persistent storage for sessions, messages, and other data
  */
 
-import Database from "better-sqlite3";
+import { DatabaseSync, type StatementSync, type SQLInputValue } from "node:sqlite";
 import { app } from "electron";
 import { join } from "path";
 import {
@@ -19,7 +19,7 @@ import { log, logError, logWarn } from "../utils/logger";
 
 export interface DatabaseInstance {
   // Raw database access (for advanced queries)
-  raw: Database.Database;
+  raw: DatabaseSync;
 
   // Session operations
   sessions: {
@@ -58,9 +58,8 @@ export interface DatabaseInstance {
   };
 
   // For compatibility with old interface
-  prepare: (sql: string) => Database.Statement;
+  prepare: (sql: string) => StatementSync;
   exec: (sql: string) => void;
-  pragma: (pragma: string) => unknown;
   close: () => void;
 }
 
@@ -242,10 +241,10 @@ function getDatabasePath(): string {
 /**
  * Initialize the database schema
  */
-function initializeSchema(database: Database.Database): void {
+function initializeSchema(database: DatabaseSync): void {
   try {
     // Enable WAL mode for better performance
-    database.pragma("journal_mode = WAL");
+    database.exec("PRAGMA journal_mode = WAL");
 
     // Create sessions table
     database.exec(`
@@ -453,7 +452,7 @@ const ALLOWED_COLUMN_TYPES = [
 ] as const;
 
 function ensureColumn(
-  database: Database.Database,
+  database: DatabaseSync,
   table: string,
   column: string,
   definition: string,
@@ -501,16 +500,13 @@ export function initDatabase(): DatabaseInstance {
   const dbPath = getDatabasePath();
   log("[Database] Opening database at:", dbPath);
 
-  let rawDb: Database.Database;
+  let rawDb: DatabaseSync;
   try {
-    rawDb = new Database(dbPath);
+    rawDb = new DatabaseSync(dbPath, { enableForeignKeyConstraints: true });
   } catch (error) {
     logError("[Database] Failed to open database at:", dbPath, error);
     throw error;
   }
-
-  // Enable foreign keys
-  rawDb.pragma("foreign_keys = ON");
 
   // Initialize schema
   initializeSchema(rawDb);
@@ -645,7 +641,7 @@ export function initDatabase(): DatabaseInstance {
         values.push(id);
 
         const sql = `UPDATE sessions SET ${setClauses.join(", ")} WHERE id = ?`;
-        rawDb.prepare(sql).run(...values);
+        rawDb.prepare(sql).run(...(values as [SQLInputValue, ...SQLInputValue[]]));
       },
 
       get: (id: string): SessionRow | undefined => {
@@ -653,7 +649,7 @@ export function initDatabase(): DatabaseInstance {
       },
 
       getAll: (): SessionRow[] => {
-        return getAllSessionsStmt.all() as SessionRow[];
+        return getAllSessionsStmt.all() as unknown as SessionRow[];
       },
 
       delete: (id: string) => {
@@ -686,7 +682,7 @@ export function initDatabase(): DatabaseInstance {
       },
 
       getBySessionId: (sessionId: string): MessageRow[] => {
-        return getMessagesBySessionStmt.all(sessionId) as MessageRow[];
+        return getMessagesBySessionStmt.all(sessionId) as unknown as MessageRow[];
       },
 
       delete: (id: string) => {
@@ -732,11 +728,11 @@ export function initDatabase(): DatabaseInstance {
 
         values.push(id);
         const sql = `UPDATE trace_steps SET ${setClauses.join(", ")} WHERE id = ?`;
-        rawDb.prepare(sql).run(...values);
+        rawDb.prepare(sql).run(...(values as [SQLInputValue, ...SQLInputValue[]]));
       },
 
       getBySessionId: (sessionId: string): TraceStepRow[] => {
-        return getTraceStepsBySessionStmt.all(sessionId) as TraceStepRow[];
+        return getTraceStepsBySessionStmt.all(sessionId) as unknown as TraceStepRow[];
       },
 
       deleteBySessionId: (sessionId: string) => {
@@ -784,7 +780,7 @@ export function initDatabase(): DatabaseInstance {
         values.push(id);
 
         const sql = `UPDATE scheduled_tasks SET ${setClauses.join(", ")} WHERE id = ?`;
-        rawDb.prepare(sql).run(...values);
+        rawDb.prepare(sql).run(...(values as [SQLInputValue, ...SQLInputValue[]]));
       },
 
       get: (id: string): ScheduledTaskRow | undefined => {
@@ -792,7 +788,7 @@ export function initDatabase(): DatabaseInstance {
       },
 
       getAll: (): ScheduledTaskRow[] => {
-        return getAllScheduledTasksStmt.all() as ScheduledTaskRow[];
+        return getAllScheduledTasksStmt.all() as unknown as ScheduledTaskRow[];
       },
 
       delete: (id: string) => {
@@ -803,7 +799,6 @@ export function initDatabase(): DatabaseInstance {
     // Compatibility layer for old interface
     prepare: (sql: string) => rawDb.prepare(sql),
     exec: (sql: string) => rawDb.exec(sql),
-    pragma: (pragma: string) => rawDb.pragma(pragma),
     close: () => {
       rawDb.close();
       db = null;

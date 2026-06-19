@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type { DatabaseSync } from "node:sqlite";
 import type { Message, MemoryEntry, ContentBlock } from "../../renderer/types";
 import { v4 as uuidv4 } from "uuid";
 import { logError } from "../utils/logger";
@@ -17,10 +17,10 @@ interface ContextStrategy {
  * 2. Intelligent context management for Agent API calls
  */
 export class MemoryManager {
-  private db: Database.Database;
+  private db: DatabaseSync;
   private maxContextTokens: number;
 
-  constructor(db: Database.Database, maxContextTokens = 180000) {
+  constructor(db: DatabaseSync, maxContextTokens = 180000) {
     this.db = db;
     this.maxContextTokens = maxContextTokens;
   }

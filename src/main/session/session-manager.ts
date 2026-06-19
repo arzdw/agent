@@ -1357,14 +1357,19 @@ export class SessionManager {
     }
 
     // Perform all SQLite deletions atomically
-    this.db.raw.transaction(() => {
+    this.db.raw.exec("BEGIN");
+    try {
       for (const sessionId of sessionIds) {
         this.db.sessions.delete(sessionId);
         this.messageCache.delete(sessionId);
         this.sessionTitleAttempts.delete(sessionId);
         this.titleGenerationTokens.delete(sessionId);
       }
-    })();
+      this.db.raw.exec("COMMIT");
+    } catch (e) {
+      this.db.raw.exec("ROLLBACK");
+      throw e;
+    }
 
     if (this.extensionManager) {
       for (const sessionId of sessionIds) {
@@ -1410,22 +1415,32 @@ export class SessionManager {
     for (const sessionId of sessionIds) {
       this.stopSession(sessionId);
     }
-    this.db.raw.transaction(() => {
+    this.db.raw.exec("BEGIN");
+    try {
       const now = Date.now();
       for (const sessionId of sessionIds) {
         this.db.sessions.update(sessionId, { archived: 1, archived_at: now });
       }
-    })();
+      this.db.raw.exec("COMMIT");
+    } catch (e) {
+      this.db.raw.exec("ROLLBACK");
+      throw e;
+    }
     log("[SessionManager] Batch archived sessions:", sessionIds.length);
   }
 
   // Batch unarchive sessions
   batchUnarchiveSessions(sessionIds: string[]): void {
-    this.db.raw.transaction(() => {
+    this.db.raw.exec("BEGIN");
+    try {
       for (const sessionId of sessionIds) {
         this.db.sessions.update(sessionId, { archived: 0, archived_at: null });
       }
-    })();
+      this.db.raw.exec("COMMIT");
+    } catch (e) {
+      this.db.raw.exec("ROLLBACK");
+      throw e;
+    }
     log("[SessionManager] Batch unarchived sessions:", sessionIds.length);
   }
 
