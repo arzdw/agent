@@ -98,6 +98,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const slashTriggerRef = useRef(false);
     const selectFilesRef = useRef<() => void>(() => {});
+    /** Tracks whether an IME (e.g. Chinese Pinyin) composition is in progress. */
+    const isComposingRef = useRef(false);
 
     // --- Auto-resize textarea ---
     const adjustTextareaHeight = useCallback(() => {
@@ -760,115 +762,130 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           <div
             className={`transition-colors ${isDragging ? "ring-2 ring-accent bg-accent/5" : ""} ${cardClassName}`}
           >
-          <textarea
-            ref={textareaRef}
-            value={prompt}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              const textarea = textareaRef.current;
+            <textarea
+              ref={textareaRef}
+              value={prompt}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                const textarea = textareaRef.current;
+                const isComposing = isComposingRef.current;
 
-              // Slash menu trigger: onKeyDown sets slashTriggerRef when '/' is pressed
-              if (slashTriggerRef.current) {
-                slashTriggerRef.current = false;
-                if (textarea) {
-                  const cursorPos = textarea.selectionStart;
-                  const charBefore =
-                    cursorPos > 1 ? newValue[cursorPos - 2] : "";
-                  // Trigger only at start of input or after space, and not after another /
+                // Slash menu trigger: onKeyDown sets slashTriggerRef when '/' is pressed
+                if (slashTriggerRef.current) {
+                  slashTriggerRef.current = false;
+                  if (textarea) {
+                    const cursorPos = textarea.selectionStart;
+                    const charBefore =
+                      cursorPos > 1 ? newValue[cursorPos - 2] : "";
+                    // Trigger only at start of input or after space, and not after another /
+                    if (
+                      (cursorPos <= 1 ||
+                        charBefore === " " ||
+                        charBefore === "\n") &&
+                      charBefore !== "/"
+                    ) {
+                      setSlashStartIndex(cursorPos - 1);
+                      setSlashFilter("");
+                      setSlashSelectedIndex(0);
+                      setShowSlashMenu(true);
+                    }
+                  }
+                }
+
+                // Filter while slash menu is open.
+                // During IME composition, selectionStart is locked to the
+                // composition-range start; use selectionEnd to include the
+                // composed (pinyin) text so filtering works in real time.
+                if (showSlashMenu && textarea) {
+                  const endPos = isComposing
+                    ? textarea.selectionEnd
+                    : textarea.selectionStart;
+                  const query = newValue.slice(slashStartIndex + 1, endPos);
                   if (
-                    (cursorPos <= 1 ||
-                      charBefore === " " ||
-                      charBefore === "\n") &&
-                    charBefore !== "/"
+                    !isComposing &&
+                    (query.includes(" ") || query.includes("\n"))
                   ) {
-                    setSlashStartIndex(cursorPos - 1);
-                    setSlashFilter("");
+                    closeSlashMenu();
+                  } else {
+                    setSlashFilter(query);
                     setSlashSelectedIndex(0);
-                    setShowSlashMenu(true);
                   }
                 }
-              }
 
-              // Filter while slash menu is open
-              if (showSlashMenu && textarea) {
-                const query = newValue.slice(
-                  slashStartIndex + 1,
-                  textarea.selectionStart,
-                );
-                if (query.includes(" ") || query.includes("\n")) {
-                  closeSlashMenu();
-                } else {
-                  setSlashFilter(query);
-                  setSlashSelectedIndex(0);
+                // Detect if / was deleted → close menu.
+                // Skip this check during composition — selectionStart is
+                // locked to the composition start and may falsely trigger.
+                if (showSlashMenu && textarea && !isComposing) {
+                  if (textarea.selectionStart <= slashStartIndex) {
+                    closeSlashMenu();
+                  }
                 }
-              }
 
-              // Detect if / was deleted → close menu
-              if (showSlashMenu && textarea) {
-                if (textarea.selectionStart <= slashStartIndex) {
-                  closeSlashMenu();
+                setPrompt(newValue);
+              }}
+              onPaste={handlePaste}
+              placeholder={placeholder}
+              disabled={disabled}
+              rows={1}
+              className={textareaClassName}
+              onCompositionStart={() => {
+                isComposingRef.current = true;
+              }}
+              onCompositionEnd={() => {
+                isComposingRef.current = false;
+                // onChange fires after compositionend with correct
+                // selectionStart, so no explicit re-filter needed here.
+              }}
+              onKeyDown={(e) => {
+                // Detect '/' key for slash menu trigger (before any state check)
+                if (
+                  e.key === "/" &&
+                  !isComposingRef.current &&
+                  !e.ctrlKey &&
+                  !e.metaKey &&
+                  !e.altKey
+                ) {
+                  slashTriggerRef.current = true;
                 }
-              }
 
-              setPrompt(newValue);
-            }}
-            onPaste={handlePaste}
-            placeholder={placeholder}
-            disabled={disabled}
-            rows={1}
-            className={textareaClassName}
-            onKeyDown={(e) => {
-              // Detect '/' key for slash menu trigger (before any state check)
-              if (
-                e.key === "/" &&
-                !e.nativeEvent.isComposing &&
-                !e.ctrlKey &&
-                !e.metaKey &&
-                !e.altKey
-              ) {
-                slashTriggerRef.current = true;
-              }
+                // Slash menu keyboard nav
+                if (showSlashMenu && filteredItems.length > 0) {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setSlashSelectedIndex((prev) =>
+                      Math.min(prev + 1, filteredItems.length - 1),
+                    );
+                    return;
+                  }
+                  if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setSlashSelectedIndex((prev) => Math.max(prev - 1, 0));
+                    return;
+                  }
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    if (filteredItems[slashSelectedIndex]) {
+                      selectSlashItem(filteredItems[slashSelectedIndex]);
+                    }
+                    return;
+                  }
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    closeSlashMenu();
+                    return;
+                  }
+                  // Any other key that's not the slash filter → let onChange handle it
+                }
 
-              // Slash menu keyboard nav
-              if (showSlashMenu && filteredItems.length > 0) {
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setSlashSelectedIndex((prev) =>
-                    Math.min(prev + 1, filteredItems.length - 1),
-                  );
-                  return;
-                }
-                if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  setSlashSelectedIndex((prev) => Math.max(prev - 1, 0));
-                  return;
-                }
                 if (e.key === "Enter" && !e.shiftKey) {
+                  // Block Enter during IME composition (e.g. pinyin → Chinese).
+                  if (isComposingRef.current || e.keyCode === 229) return;
                   e.preventDefault();
-                  if (filteredItems[slashSelectedIndex]) {
-                    selectSlashItem(filteredItems[slashSelectedIndex]);
-                  }
-                  return;
+                  handleSubmitInternal();
                 }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  closeSlashMenu();
-                  return;
-                }
-                // Any other key that's not the slash filter → let onChange handle it
-              }
-
-              if (e.key === "Enter" && !e.shiftKey) {
-                // Block Enter during IME composition (e.g. pinyin → Chinese).
-                // isComposing is set natively by Chromium, independent of
-                // React's synthetic events — always accurate in Electron 35+.
-                if (e.nativeEvent.isComposing || e.keyCode === 229) return;
-                e.preventDefault();
-                handleSubmitInternal();
-              }
-            }}
-          />
-          {bottomSlot}
+              }}
+            />
+            {bottomSlot}
           </div>
         </div>
       </form>
