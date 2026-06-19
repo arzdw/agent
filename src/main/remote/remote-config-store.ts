@@ -4,8 +4,7 @@
  */
 
 import Store from "electron-store";
-import { log, logWarn } from "../utils/logger";
-import { createEncryptedStoreWithKeyRotation } from "../utils/store-encryption";
+import { log } from "../utils/logger";
 import type {
   RemoteConfig,
   GatewayConfig,
@@ -22,26 +21,13 @@ class RemoteConfigStore {
   private store: Store<RemoteConfig & { pairedUsers: PairedUser[] }>;
 
   constructor() {
-    // Cast to satisfy the Record<string, unknown> constraint of the encrypted store utility;
-    // RemoteConfig & { pairedUsers: PairedUser[] } is structurally compatible at runtime.
-    type RemoteConfigRecord = RemoteConfig & {
-      pairedUsers: PairedUser[];
-    } & Record<string, unknown>;
-    this.store = createEncryptedStoreWithKeyRotation<RemoteConfigRecord>({
-      stableKey: "deskwand-remote-stable-v1",
-      legacyKeys: [],
-      storeOptions: {
-        name: "remote-config",
-        projectName: "deskwand",
-        defaults: {
-          ...DEFAULT_REMOTE_CONFIG,
-          pairedUsers: [],
-        },
+    this.store = new Store<RemoteConfig & { pairedUsers: PairedUser[] }>({
+      name: "remote-config",
+      defaults: {
+        ...DEFAULT_REMOTE_CONFIG,
+        pairedUsers: [],
       },
-      logPrefix: "[RemoteConfigStore]",
-      log,
-      warn: logWarn,
-    }) as unknown as Store<RemoteConfig & { pairedUsers: PairedUser[] }>;
+    });
 
     // Migrate: change pairing mode to allowlist (allow everyone by default)
     this.migrateAuthMode();
