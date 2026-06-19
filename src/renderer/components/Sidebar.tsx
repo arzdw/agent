@@ -706,12 +706,12 @@ export function Sidebar({ width = 280 }: { width?: number }) {
       <div className="flex-1 overflow-y-auto px-3 py-4">
         <div className="space-y-4">
           {/* Chats section */}
-          <section>
+          <section className="group/chat-section">
             <div className="px-3 pb-2 flex items-center justify-between gap-2">
               <div className="text-sm font-medium leading-5 text-text-secondary">
                 {t("sidebar.conversations")}
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 opacity-0 pointer-events-none group-hover/chat-section:opacity-100 group-hover/chat-section:pointer-events-auto transition-opacity duration-150">
                 <button
                   onClick={() => toggleConversations()}
                   className="w-6 h-6 rounded-md flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
@@ -751,12 +751,12 @@ export function Sidebar({ width = 280 }: { width?: number }) {
           </section>
 
           {/* Projects section */}
-          <section>
+          <section className="group/project-section">
             <div className="px-3 pb-2 flex items-center justify-between gap-2 relative">
               <div className="text-sm font-medium leading-5 text-text-secondary">
                 {t("sidebar.projects")}
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 opacity-0 pointer-events-none group-hover/project-section:opacity-100 group-hover/project-section:pointer-events-auto transition-opacity duration-150">
                 <button
                   onClick={() => toggleProjects()}
                   className="w-6 h-6 rounded-md flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
@@ -782,26 +782,26 @@ export function Sidebar({ width = 280 }: { width?: number }) {
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
-                {showProjectActions && (
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute right-0 top-7 z-20 w-40 rounded-lg border border-border-muted bg-background shadow-lg p-1"
-                  >
-                    <button
-                      onClick={() => void handleNewProject()}
-                      className="w-full text-left rounded-md px-2.5 py-2 text-sm text-text-primary hover:bg-surface-hover transition-colors"
-                    >
-                      {t("sidebar.newProject")}
-                    </button>
-                    <button
-                      onClick={() => void handleOpenProject()}
-                      className="w-full text-left rounded-md px-2.5 py-2 text-sm text-text-primary hover:bg-surface-hover transition-colors"
-                    >
-                      {t("sidebar.openProject")}
-                    </button>
-                  </div>
-                )}
               </div>
+              {showProjectActions && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 top-7 z-20 w-40 rounded-lg border border-border-muted bg-background shadow-lg p-1"
+                >
+                  <button
+                    onClick={() => void handleNewProject()}
+                    className="w-full text-left rounded-md px-2.5 py-2 text-sm text-text-primary hover:bg-surface-hover transition-colors"
+                  >
+                    {t("sidebar.newProject")}
+                  </button>
+                  <button
+                    onClick={() => void handleOpenProject()}
+                    className="w-full text-left rounded-md px-2.5 py-2 text-sm text-text-primary hover:bg-surface-hover transition-colors"
+                  >
+                    {t("sidebar.openProject")}
+                  </button>
+                </div>
+              )}
             </div>
 
             {!projectsCollapsed &&
