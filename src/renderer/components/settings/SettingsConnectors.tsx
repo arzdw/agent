@@ -20,6 +20,7 @@ import type {
   MCPToolInfo,
   MCPPreset,
 } from "./shared";
+import { ConfirmDialog } from "../ConfirmDialog";
 
 const isElectron =
   typeof window !== "undefined" && window.electronAPI !== undefined;
@@ -45,6 +46,7 @@ export function SettingsConnectors({ isActive }: { isActive: boolean }) {
     key: string;
     preset: MCPPreset;
   } | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [presetEnvValues, setPresetEnvValues] = useState<
     Record<string, string>
   >({});
@@ -187,8 +189,7 @@ export function SettingsConnectors({ isActive }: { isActive: boolean }) {
     }
   }
 
-  async function handleDeleteServer(serverId: string) {
-    if (!confirm(t("mcp.deleteConnectorConfirm"))) return;
+  async function doDeleteServer(serverId: string) {
     setIsLoading(true);
     try {
       await window.electronAPI.mcp.deleteServer(serverId);
@@ -200,6 +201,10 @@ export function SettingsConnectors({ isActive }: { isActive: boolean }) {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleDeleteServer(serverId: string) {
+    setPendingDeleteId(serverId);
   }
 
   async function handleToggleEnabled(server: MCPServerConfig) {
@@ -438,6 +443,18 @@ export function SettingsConnectors({ isActive }: { isActive: boolean }) {
       <div className="text-sm text-text-muted text-center pt-2">
         {t("mcp.toolsAvailable", { count: tools.length })}
       </div>
+
+      <ConfirmDialog
+        isOpen={pendingDeleteId !== null}
+        title={t("mcp.deleteConnectorConfirm")}
+        onConfirm={() => {
+          const id = pendingDeleteId;
+          if (!id) return;
+          setPendingDeleteId(null);
+          doDeleteServer(id);
+        }}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   );
 }

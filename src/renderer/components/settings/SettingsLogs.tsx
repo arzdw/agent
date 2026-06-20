@@ -10,6 +10,7 @@ import {
   Copy,
 } from "lucide-react";
 import { formatAppDateTime } from "../../utils/i18n-format";
+import { ConfirmDialog } from "../ConfirmDialog";
 import { SettingsContentSection } from "./shared";
 
 const isElectron =
@@ -25,6 +26,7 @@ export function SettingsLogs({ isActive }: { isActive: boolean }) {
   const [success, setSuccess] = useState("");
   const [logsDirectory, setLogsDirectory] = useState("");
   const [devLogsEnabled, setDevLogsEnabled] = useState(true);
+  const [pendingClear, setPendingClear] = useState(false);
 
   const loadLogs = useCallback(async () => {
     try {
@@ -117,11 +119,7 @@ export function SettingsLogs({ isActive }: { isActive: boolean }) {
     }
   }
 
-  async function handleClear() {
-    if (!confirm(t("logs.clearConfirm"))) {
-      return;
-    }
-
+  async function doClear() {
     setIsLoading(true);
     setError("");
     setSuccess("");
@@ -139,6 +137,10 @@ export function SettingsLogs({ isActive }: { isActive: boolean }) {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleClear() {
+    setPendingClear(true);
   }
 
   function formatFileSize(bytes: number): string {
@@ -322,6 +324,17 @@ export function SettingsLogs({ isActive }: { isActive: boolean }) {
         <p>{t("logs.helpText1")}</p>
         <p>{t("logs.helpText2")}</p>
       </div>
+
+      <ConfirmDialog
+        isOpen={pendingClear}
+        title={t("logs.clearConfirm")}
+        confirmLabel={t("logs.clearAll")}
+        onConfirm={() => {
+          setPendingClear(false);
+          doClear();
+        }}
+        onCancel={() => setPendingClear(false)}
+      />
     </div>
   );
 }

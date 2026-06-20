@@ -11,6 +11,7 @@ import type {
   MemorySearchScope,
 } from "../../types";
 import { useAppStore } from "../../store";
+import { ConfirmDialog } from "../ConfirmDialog";
 import { SettingsContentSection } from "./shared";
 
 type SearchMode = "workspace" | "all" | "global";
@@ -96,6 +97,8 @@ export function SettingsMemory() {
   const [fileContent, setFileContent] = useState<MemoryDebugFileContent | null>(
     null,
   );
+  type MaintenanceAction = "rebuildWorkspace" | "rebuildAll" | "clearWorkspace" | "clearCore";
+  const [pendingMaintenance, setPendingMaintenance] = useState<MaintenanceAction | null>(null);
   const [runtimeDraft, setRuntimeDraft] = useState<MemoryRuntimeConfig>(
     cloneRuntimeConfig(appConfig?.memoryRuntime),
   );
@@ -285,11 +288,8 @@ export function SettingsMemory() {
     }
   };
 
-  const handleRebuildWorkspace = async () => {
+  async function doRebuildWorkspace() {
     if (!currentWorkspace) {
-      return;
-    }
-    if (!window.confirm(t("memory.rebuildConfirm"))) {
       return;
     }
     setIsBusy(true);
@@ -303,16 +303,16 @@ export function SettingsMemory() {
     } finally {
       setIsBusy(false);
     }
-  };
+  }
 
-  const handleRebuildAll = async () => {
-    if (
-      !window.confirm(
-        t("memory.rebuildAllConfirm", "这会清空并重建全部记忆，是否继续？"),
-      )
-    ) {
+  function handleRebuildWorkspace() {
+    if (!currentWorkspace) {
       return;
     }
+    setPendingMaintenance("rebuildWorkspace");
+  }
+
+  async function doRebuildAll() {
     setIsBusy(true);
     setStatus(null);
     try {
@@ -330,13 +330,14 @@ export function SettingsMemory() {
     } finally {
       setIsBusy(false);
     }
-  };
+  }
 
-  const handleClearWorkspace = async () => {
+  function handleRebuildAll() {
+    setPendingMaintenance("rebuildAll");
+  }
+
+  async function doClearWorkspace() {
     if (!currentWorkspace) {
-      return;
-    }
-    if (!window.confirm(t("memory.clearWorkspaceConfirm"))) {
       return;
     }
     setIsBusy(true);
@@ -353,12 +354,16 @@ export function SettingsMemory() {
     } finally {
       setIsBusy(false);
     }
-  };
+  }
 
-  const handleClearCore = async () => {
-    if (!window.confirm(t("memory.clearCoreConfirm"))) {
+  function handleClearWorkspace() {
+    if (!currentWorkspace) {
       return;
     }
+    setPendingMaintenance("clearWorkspace");
+  }
+
+  async function doClearCore() {
     setIsBusy(true);
     setStatus(null);
     try {
@@ -372,7 +377,11 @@ export function SettingsMemory() {
     } finally {
       setIsBusy(false);
     }
-  };
+  }
+
+  function handleClearCore() {
+    setPendingMaintenance("clearCore");
+  }
 
   return (
     <div className="space-y-6">
@@ -1088,6 +1097,31 @@ export function SettingsMemory() {
           {status}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingMaintenance !== null}
+        title={(() => {
+          switch (pendingMaintenance) {
+            case "rebuildWorkspace": return t("memory.rebuildConfirm");
+            case "rebuildAll": return t("memory.rebuildAllConfirm", "这会清空并重建全部记忆，是否继续？");
+            case "clearWorkspace": return t("memory.clearWorkspaceConfirm");
+            case "clearCore": return t("memory.clearCoreConfirm");
+            default: return "";
+          }
+        })()}
+        onConfirm={() => {
+          const action = pendingMaintenance;
+          if (!action) return;
+          setPendingMaintenance(null);
+          switch (action) {
+            case "rebuildWorkspace": doRebuildWorkspace(); break;
+            case "rebuildAll": doRebuildAll(); break;
+            case "clearWorkspace": doClearWorkspace(); break;
+            case "clearCore": doClearCore(); break;
+          }
+        }}
+        onCancel={() => setPendingMaintenance(null)}
+      />
     </div>
   );
 }

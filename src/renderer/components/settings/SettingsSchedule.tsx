@@ -19,6 +19,7 @@ import type {
 } from "../../types";
 import { useAppStore } from "../../store";
 import { formatAppDateTime, joinAppList } from "../../utils/i18n-format";
+import { ConfirmDialog } from "../ConfirmDialog";
 import {
   renderLocalizedBannerMessage,
   getWeekdayOptions,
@@ -64,6 +65,7 @@ export function SettingsSchedule({ isActive }: { isActive: boolean }) {
     1,
   ]);
   const [enabled, setEnabled] = useState(true);
+  const [pendingDeleteTask, setPendingDeleteTask] = useState<ScheduleTask | null>(null);
   const [repeatEvery, setRepeatEvery] = useState(1);
   const [repeatUnit, setRepeatUnit] = useState<ScheduleRepeatUnit>("day");
   const weekdayOptions = getWeekdayOptions(t);
@@ -362,10 +364,8 @@ export function SettingsSchedule({ isActive }: { isActive: boolean }) {
     setIsLoading(false);
   }
 
-  async function deleteTask(task: ScheduleTask) {
+  async function doDeleteTask(task: ScheduleTask) {
     if (!isElectron) return;
-    if (!window.confirm(t("schedule.deleteConfirm", { title: task.title })))
-      return;
     setIsLoading(true);
     setError(null);
     setSuccess(null);
@@ -382,8 +382,13 @@ export function SettingsSchedule({ isActive }: { isActive: boolean }) {
           ? { text: err.message }
           : { key: "schedule.deleteFailed" },
       );
+    } finally {
       setIsLoading(false);
     }
+  }
+
+  function deleteTask(task: ScheduleTask) {
+    setPendingDeleteTask(task);
   }
 
   function editTask(task: ScheduleTask) {
@@ -743,6 +748,18 @@ export function SettingsSchedule({ isActive }: { isActive: boolean }) {
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={pendingDeleteTask !== null}
+        title={t("schedule.deleteConfirm", { title: pendingDeleteTask?.title ?? "" })}
+        onConfirm={() => {
+          const task = pendingDeleteTask;
+          if (!task) return;
+          setPendingDeleteTask(null);
+          doDeleteTask(task);
+        }}
+        onCancel={() => setPendingDeleteTask(null)}
+      />
     </div>
   );
 }

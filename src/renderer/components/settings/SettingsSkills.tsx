@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { Skill } from "../../types";
 import type { LocalizedBanner } from "./shared";
+import { ConfirmDialog } from "../ConfirmDialog";
 
 const isElectron =
   typeof window !== "undefined" && window.electronAPI !== undefined;
@@ -134,6 +135,7 @@ export function SettingsSkills({ isActive }: { isActive: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<LocalizedBanner | null>(null);
   const [tab, setTab] = useState<"builtin" | "agent" | "custom">("builtin");
+  const [pendingDelete, setPendingDelete] = useState<{skillId: string; skillName: string} | null>(null);
 
   const loadSkills = useCallback(
     async (silent = false) => {
@@ -170,8 +172,7 @@ export function SettingsSkills({ isActive }: { isActive: boolean }) {
     }
   }
 
-  async function handleDelete(skillId: string, skillName: string) {
-    if (!confirm(t("skills.deleteSkill", { name: skillName }))) return;
+  async function doDelete(skillId: string) {
     setIsLoading(true);
     try {
       await window.electronAPI.skills.delete(skillId);
@@ -183,6 +184,10 @@ export function SettingsSkills({ isActive }: { isActive: boolean }) {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleDelete(skillId: string, skillName: string) {
+    setPendingDelete({ skillId, skillName });
   }
 
   async function handleToggle(skill: Skill) {
@@ -304,6 +309,18 @@ export function SettingsSkills({ isActive }: { isActive: boolean }) {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingDelete !== null}
+        title={t("skills.deleteSkill", { name: pendingDelete?.skillName ?? "" })}
+        onConfirm={() => {
+          const id = pendingDelete?.skillId;
+          if (!id) return;
+          setPendingDelete(null);
+          doDelete(id);
+        }}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }
