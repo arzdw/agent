@@ -1098,6 +1098,9 @@ export function ChatView() {
                 activeProviderProfileKey={activeProviderProfileKey}
                 onSelectModel={(profileKey, modelId) => {
                   if (!activeSession) return;
+                  // Validate modelId exists in modelOptions before applying
+                  const group = modelOptions.find(g => g.profileKey === profileKey);
+                  if (!group?.items.some(i => i.id === modelId)) return;
                   setSessionProviderModel(
                     activeSession.id,
                     profileKey,

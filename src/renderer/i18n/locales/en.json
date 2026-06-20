@@ -1063,8 +1063,8 @@
     "checkAgain": "Check Again",
     "checking": "Checking…",
     "upToDate": "You're up to date",
-    "newVersionAvailable": "v{version} found",
-    "downloading": "Downloading {percent}%",
+    "newVersionAvailable": "v{{version}} found",
+    "downloading": "Downloading {{percent}}%",
     "readyToInstall": "Ready to install",
     "restartNow": "Restart Now",
     "updateFailed": "Update failed"

@@ -108,15 +108,25 @@ module.exports = async function afterAllArtifactBuild(buildResult) {
       const sha512 = crypto.createHash("sha512").update(dmgBuf).digest("base64");
       const size = dmgBuf.length;
 
+      // Extract arch from dmg filename: Deskwand-1.0.3-mac-arm64.dmg → arm64
+      const dmgArch = dmgName.replace(`${productName}-${version}-mac-`, "").replace(".dmg", "");
+
       lines.push(`  - url: ${dmgName}`);
       lines.push(`    sha512: ${sha512}`);
       lines.push(`    size: ${size}`);
 
-      // Create a .zip copy of the DMG for MacUpdater (electron-updater macOS uses Squirrel.Mac,
-      // which requires a .zip file — see MacUpdater.findFile("zip", ["pkg", "dmg"]) logic)
-      const zipName = dmgName.replace(/\.dmg$/, ".zip");
+      // Create a .zip of the .app bundle for MacUpdater
+      // electron-updater on macOS uses Squirrel.Mac, which requires a .zip containing
+      // the .app bundle directly (ShipIt looks for ${CFBundleIdentifier}.app inside the zip).
+      // See MacUpdater.findFile("zip", ["pkg", "dmg"]) — it looks for .zip first.
+      // Zipping the DMG does NOT work because Squirrel.Mac can't extract a DMG.
+      // We zip the .app directory from the mac-${arch} build output, not the DMG.
+      const zipName = `${productName}-${version}-mac-${dmgArch}.zip`;
       const zipPath = path.join(outDir, zipName);
-      console.log(`  Creating zip copy for MacUpdater: ${zipName}`);
+      // Zip the .app directory from the mac-<arch> build output
+      const appFolder = path.join(outDir, `mac-${dmgArch}`, `${productName}.app`);
+
+      console.log(`  Creating .app zip for MacUpdater: ${zipName}`);
       try {
         await new Promise((resolve, reject) => {
           const output = fs.createWriteStream(zipPath);
@@ -135,7 +145,7 @@ module.exports = async function afterAllArtifactBuild(buildResult) {
           });
           archive.on("error", reject);
           archive.pipe(output);
-          archive.file(dmgPath, { name: dmgName });
+          archive.directory(appFolder, `${productName}.app`);
           archive.finalize();
         });
       } catch (err) {

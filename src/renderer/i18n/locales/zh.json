@@ -1063,8 +1063,8 @@
     "checkAgain": "重新检查",
     "checking": "检查中…",
     "upToDate": "已是最新版本",
-    "newVersionAvailable": "发现 v{version}",
-    "downloading": "下载中 {percent}%",
+    "newVersionAvailable": "发现 v{{version}}",
+    "downloading": "下载中 {{percent}}%",
     "readyToInstall": "下载完成，可安装",
     "restartNow": "立即重启",
     "updateFailed": "更新失败"

@@ -23,6 +23,13 @@ export function initUpdater(
   autoUpdater.forceDevUpdateConfig = true;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = false;
+  // Disable differential download on macOS to ensure consistent progress reporting.
+  // Squirrel.Mac's differential download (via blockmap) can produce progress events
+  // that overlap with the fallback full download, confusing the progress UI.
+  // Windows/Linux have working blockmaps and benefit from differential downloads.
+  if (process.platform === "darwin") {
+    autoUpdater.disableDifferentialDownload = true;
+  }
 
   // ── Event listeners ──
 
@@ -44,6 +51,14 @@ export function initUpdater(
   });
 
   autoUpdater.on("download-progress", (progress) => {
+    const pct = Number.isFinite(progress.percent) ? progress.percent.toFixed(1) : "?";
+    const txMB = Number.isFinite(progress.transferred)
+      ? (progress.transferred / 1024 / 1024).toFixed(1)
+      : "?";
+    const totMB = Number.isFinite(progress.total)
+      ? (progress.total / 1024 / 1024).toFixed(1)
+      : "?";
+    log(`[AutoUpdater] Download progress: ${pct}% (${txMB}MB / ${totMB}MB)`);
     sendToRenderer({
       type: "update.progress",
       payload: {

@@ -264,6 +264,9 @@ export function WelcomeView() {
               modelOptions={modelOptions}
               activeProviderProfileKey={selectedProviderProfileKey}
               onSelectModel={(profileKey, modelId) => {
+                // Validate modelId exists in modelOptions before applying
+                const group = modelOptions.find(g => g.profileKey === profileKey);
+                if (!group?.items.some(i => i.id === modelId)) return;
                 setSelectedModel(modelId);
                 setSelectedProviderProfileKey(profileKey);
                 // ponytail: project → localStorage only, global → electron-store
