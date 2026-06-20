@@ -925,10 +925,6 @@ ${hints.join("\n")}
     return this._puppeteerPage;
   }
 
-  private _invalidatePuppeteerPage(): void {
-    this._puppeteerPage = null;
-  }
-
   // ---- internal browser tools ----
 
   /**
@@ -944,131 +940,44 @@ ${hints.join("\n")}
 
     const self = this;
 
-    // --- page lifecycle (BrowserViewManager) ---
+    // ---- helpers ----
 
-    const listPages = {
-      name: "internal_browser_list_pages",
-      label: "List browser pages",
-      description:
-        "List open pages in the internal browser. Currently single-tab.",
-      parameters: Type.Object({}),
-      async execute(
-        _toolCallId: any,
-        _params: any,
-        _signal: any,
-        _onUpdate: any,
-        _ctx: any,
-      ) {
-        const wc = bvm.getWebContents();
-        const page = {
-          index: 0,
-          url: wc?.getURL() ?? "about:blank",
-          title: wc?.getTitle() ?? "",
-        };
-        return {
-          content: [
-            { type: "text" as const, text: JSON.stringify({ pages: [page] }) },
-          ],
-        };
-      },
-    };
+    const getPage = () => self._getOrCreatePuppeteerPage();
 
-    const newPage = {
-      name: "internal_browser_new_page",
-      label: "Open new page",
-      description: "Navigate the internal browser to a URL or open a new page.",
-      parameters: Type.Object({
-        url: Type.String({ description: "URL to navigate to" }),
-      }),
-      async execute(
-        _toolCallId: any,
-        params: any,
-        _signal: any,
-        _onUpdate: any,
-        _ctx: any,
-      ) {
-        const { url } = params as { url: string };
-        bvm.show();
-        bvm.navigate(url);
-        self._invalidatePuppeteerPage();
-        return {
-          content: [{ type: "text" as const, text: `Navigated to ${url}` }],
-        };
-      },
-    };
-
-    const selectPage = {
-      name: "internal_browser_select_page",
-      label: "Select page",
-      description:
-        "Select a page by index. Currently single-tab — index must be 0.",
-      parameters: Type.Object({
-        pageIdx: Type.Integer({ description: "Page index (must be 0)" }),
-      }),
-      async execute(
-        _toolCallId: any,
-        params: any,
-        _signal: any,
-        _onUpdate: any,
-        _ctx: any,
-      ) {
-        const { pageIdx } = params as { pageIdx: number };
-        if (pageIdx !== 0) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: "Only page index 0 is available (single-tab mode).",
-              },
-            ],
-          };
+    // Flatten a11y tree into readable @eN [role attrs] "name" lines
+    function flattenA11y(node: unknown): string[] {
+      const lines: string[] = [];
+      let refIndex = 0;
+      const interactiveRoles = new Set([
+        "button", "link", "textbox", "searchbox", "combobox", "listbox",
+        "checkbox", "radio", "switch", "tab", "menuitem", "option",
+        "slider", "spinbutton", "heading", "listitem",
+      ]);
+      function walk(n: unknown, depth: number) {
+        const a = n as Record<string, unknown> | null;
+        if (!a) return;
+        const role = String(a.role ?? "").toLowerCase();
+        if (interactiveRoles.has(role)) {
+          refIndex++;
+          const indent = "  ".repeat(depth);
+          const parts: string[] = [`${indent}@e${refIndex} [${role}`];
+          if (a.name) parts.push(`name="${String(a.name)}"`);
+          if (a.value !== undefined && a.value !== "") parts.push(`value="${String(a.value)}"`);
+          if (a.checked === "mixed" || a.checked === true) parts.push("checked");
+          if (a.disabled) parts.push("disabled");
+          if (a.placeholder) parts.push(`placeholder="${String(a.placeholder)}"`);
+          lines.push(`${parts.join(" ")}]`);
         }
-        return {
-          content: [
-            { type: "text" as const, text: "Page 0 is already selected." },
-          ],
-        };
-      },
-    };
-
-    const closePage = {
-      name: "internal_browser_close_page",
-      label: "Close page",
-      description:
-        "Close a page by index. In single-tab mode, navigates to about:blank.",
-      parameters: Type.Object({
-        pageIdx: Type.Integer({ description: "Page index" }),
-      }),
-      async execute(
-        _toolCallId: any,
-        params: any,
-        _signal: any,
-        _onUpdate: any,
-        _ctx: any,
-      ) {
-        const { pageIdx } = params as { pageIdx: number };
-        bvm.show();
-        if (pageIdx === 0) {
-          bvm.navigate("about:blank");
-          self._invalidatePuppeteerPage();
-          return {
-            content: [
-              { type: "text" as const, text: "Reset page to about:blank." },
-            ],
-          };
+        const children = a.children as unknown[] | undefined;
+        if (Array.isArray(children)) {
+          for (const c of children) walk(c, depth + 1);
         }
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: "Only page index 0 exists (single-tab mode).",
-            },
-          ],
-        };
-      },
-    };
+      }
+      walk(node, 0);
+      return lines;
+    }
 
-    // --- page interaction (puppeteer-core) ---
+    // ---- tools ----
 
     const navigate = {
       name: "internal_browser_navigate",
@@ -1085,7 +994,7 @@ ${hints.join("\n")}
         _ctx: any,
       ) {
         const { url } = params as { url: string };
-        const page = await self._getOrCreatePuppeteerPage();
+        const page = await getPage();
         await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
         return {
           content: [
@@ -1112,7 +1021,7 @@ ${hints.join("\n")}
         _ctx: any,
       ) {
         const { fullPage } = params as { fullPage?: boolean };
-        const page = await self._getOrCreatePuppeteerPage();
+        const page = await getPage();
         const buf = (await page.screenshot({
           fullPage: fullPage ?? false,
           type: "png",
@@ -1125,10 +1034,6 @@ ${hints.join("\n")}
               text: `Screenshot captured (${(buf.length / 1024).toFixed(1)} KB)`,
             },
           ],
-          // NOTE: openCoworkImages is pi-coding-agent SDK's mechanism for
-          // attaching inline images to tool results. The SDK recognises this
-          // field and renders the image in the chat UI. If the SDK changes
-          // how it handles image content, screenshots may silently break.
           details: {
             openCoworkImages: [{ data: base64, mimeType: "image/png" }],
           },
@@ -1152,8 +1057,7 @@ ${hints.join("\n")}
         _ctx: any,
       ) {
         const { selector } = params as { selector: string };
-        const page = await self._getOrCreatePuppeteerPage();
-        // Try CSS selector click first, then fall back to text-based click via evaluate
+        const page = await getPage();
         try {
           await page.waitForSelector(selector, { timeout: 5000 });
           await page.click(selector);
@@ -1177,16 +1081,14 @@ ${hints.join("\n")}
       },
     };
 
-    const typeTool = {
-      name: "internal_browser_type",
-      label: "Type text",
+    const fillTool = {
+      name: "internal_browser_fill",
+      label: "Fill input",
       description:
-        "Type text into an input element identified by CSS selector.",
+        "Focus an input element, clear it, then type text. Use this for form fields.",
       parameters: Type.Object({
-        selector: Type.String({
-          description: "CSS selector of the input element",
-        }),
-        text: Type.String({ description: "Text to type" }),
+        selector: Type.String({ description: "CSS selector of the input element" }),
+        text: Type.String({ description: "Text to fill" }),
       }),
       async execute(
         _toolCallId: any,
@@ -1196,106 +1098,132 @@ ${hints.join("\n")}
         _ctx: any,
       ) {
         const { selector, text } = params as { selector: string; text: string };
-        const page = await self._getOrCreatePuppeteerPage();
-        // Try CSS selector, then fuzzy text/placeholder/aria-label, then label-association
-        const getSelector = async (): Promise<string> => {
-          try {
-            await page.waitForSelector(selector, { timeout: 3000 });
-            return selector;
-          } catch {
-            /* fall through */
+        const page = await getPage();
+        await page.waitForSelector(selector, { timeout: 5000 });
+        await page.focus(selector);
+        // Clear with triple-click (most inputs) + Backspace as the fast path,
+        // then zero out via evaluate to handle textarea/contenteditable.
+        await page.click(selector, { count: 3 });
+        await page.keyboard.press("Backspace");
+        await page.evaluate((sel: string) => {
+          const el = document.querySelector(sel);
+          if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+            const nativeSetter = Object.getOwnPropertyDescriptor(
+              Object.getPrototypeOf(el), "value",
+            )?.set;
+            nativeSetter?.call(el, "");
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+          } else if (el instanceof HTMLElement && el.isContentEditable) {
+            el.textContent = "";
           }
-
-          const resolved = await page.evaluate((sel: string) => {
-            const candidates = Array.from(
-              document.querySelectorAll("input, textarea, [contenteditable]"),
-            ) as HTMLElement[];
-
-            const fuzzy = (a: string | null | undefined, b: string) =>
-              a ? a.toLowerCase().includes(b.toLowerCase()) : false;
-
-            // 1) direct match on input fields (placeholder, aria-label, name, id)
-            for (const el of candidates) {
-              const inp = el as HTMLInputElement;
-              if (
-                fuzzy(inp.placeholder, sel) ||
-                fuzzy(inp.getAttribute("aria-label"), sel) ||
-                fuzzy(inp.name, sel) ||
-                fuzzy(inp.id, sel)
-              ) {
-                el.setAttribute("data-deskwand-type-target", "1");
-                return true;
-              }
-            }
-
-            // 2) label element matching text → follow for= or wrap
-            const labels = Array.from(document.querySelectorAll("label"));
-            for (const lbl of labels) {
-              if (!fuzzy(lbl.textContent, sel)) continue;
-              const targetId = lbl.getAttribute("for");
-              if (targetId) {
-                const target = document.getElementById(targetId);
-                if (target && candidates.includes(target as HTMLElement)) {
-                  target.setAttribute("data-deskwand-type-target", "1");
-                  return true;
-                }
-              }
-              // label wraps the input
-              const wrapped = lbl.querySelector(
-                "input, textarea, [contenteditable]",
-              );
-              if (wrapped) {
-                wrapped.setAttribute("data-deskwand-type-target", "1");
-                return true;
-              }
-            }
-
-            return false;
-          }, selector);
-
-          if (resolved) return "[data-deskwand-type-target]";
-          throw new Error(`No input element found matching "${selector}"`);
-        };
-        const sel = await getSelector();
-        try {
-          await page.evaluate((s: string) => {
-            const el = document.querySelector(s);
-            if (el instanceof HTMLElement) {
-              el.removeAttribute("data-deskwand-type-target");
-              el.focus();
-              if (
-                el instanceof HTMLInputElement ||
-                el instanceof HTMLTextAreaElement
-              ) {
-                const nativeSetter = Object.getOwnPropertyDescriptor(
-                  Object.getPrototypeOf(el),
-                  "value",
-                )?.set;
-                nativeSetter?.call(el, "");
-                el.dispatchEvent(new Event("input", { bubbles: true }));
-              }
-            }
-          }, sel);
-          await page.keyboard.type(text, { delay: 30 });
-        } finally {
-          // Always clean up the DOM marker, even if typing fails,
-          // to prevent stale selectors on the next typeTool call.
-          await page
-            .evaluate(() => {
-              const marked = document.querySelector("[data-deskwand-type-target]");
-              if (marked) marked.removeAttribute("data-deskwand-type-target");
-            })
-            .catch(() => {
-              /* best-effort */
-            });
-        }
+        }, selector);
+        await page.keyboard.type(text, { delay: 30 });
         return {
           content: [
-            {
-              type: "text" as const,
-              text: `Typed "${text}" into "${selector}"`,
-            },
+            { type: "text" as const, text: `Filled "${text}" into "${selector}"` },
           ],
+        };
+      },
+    };
+
+    const scrollTool = {
+      name: "internal_browser_scroll",
+      label: "Scroll page",
+      description: "Scroll the page by pixel deltas. Positive dy scrolls down, positive dx scrolls right.",
+      parameters: Type.Object({
+        dx: Type.Optional(Type.Number({ description: "Horizontal delta (default 0)" })),
+        dy: Type.Optional(Type.Number({ description: "Vertical delta (default 0)" })),
+      }),
+      async execute(
+        _toolCallId: any,
+        params: any,
+        _signal: any,
+        _onUpdate: any,
+        _ctx: any,
+      ) {
+        const { dx, dy } = params as { dx?: number; dy?: number };
+        const page = await getPage();
+        await page.evaluate(
+          ({ x, y }) => window.scrollBy(x ?? 0, y ?? 0),
+          { x: dx ?? 0, y: dy ?? 0 },
+        );
+        return {
+          content: [
+            { type: "text" as const, text: `Scrolled by (${dx ?? 0}, ${dy ?? 0})` },
+          ],
+        };
+      },
+    };
+
+    const hoverTool = {
+      name: "internal_browser_hover",
+      label: "Hover element",
+      description: "Hover the mouse over an element.",
+      parameters: Type.Object({
+        selector: Type.String({ description: "CSS selector of the element to hover" }),
+      }),
+      async execute(
+        _toolCallId: any,
+        params: any,
+        _signal: any,
+        _onUpdate: any,
+        _ctx: any,
+      ) {
+        const { selector } = params as { selector: string };
+        const page = await getPage();
+        await page.hover(selector);
+        return {
+          content: [{ type: "text" as const, text: `Hovered "${selector}"` }],
+        };
+      },
+    };
+
+    const selectTool = {
+      name: "internal_browser_select",
+      label: "Select option",
+      description: "Select an option from a <select> dropdown by value or label.",
+      parameters: Type.Object({
+        selector: Type.String({ description: "CSS selector of the <select> element" }),
+        value: Type.String({ description: "Option value or label to select" }),
+      }),
+      async execute(
+        _toolCallId: any,
+        params: any,
+        _signal: any,
+        _onUpdate: any,
+        _ctx: any,
+      ) {
+        const { selector, value } = params as { selector: string; value: string };
+        const page = await getPage();
+        await page.select(selector, value);
+        return {
+          content: [
+            { type: "text" as const, text: `Selected "${value}" in ${selector}` },
+          ],
+        };
+      },
+    };
+
+    const pressTool = {
+      name: "internal_browser_press",
+      label: "Press key",
+      description:
+        "Press a keyboard key. Use for Enter, Escape, Tab, Backspace, arrow keys, or combos like Control+A.",
+      parameters: Type.Object({
+        key: Type.String({ description: "Key to press (e.g. Enter, Escape, Tab, ArrowDown, Control+A)" }),
+      }),
+      async execute(
+        _toolCallId: any,
+        params: any,
+        _signal: any,
+        _onUpdate: any,
+        _ctx: any,
+      ) {
+        const { key } = params as { key: string };
+        const page = await getPage();
+        await page.keyboard.press(key as import("puppeteer-core").KeyInput);
+        return {
+          content: [{ type: "text" as const, text: `Pressed "${key}"` }],
         };
       },
     };
@@ -1304,7 +1232,7 @@ ${hints.join("\n")}
       name: "internal_browser_snapshot",
       label: "Take text snapshot",
       description:
-        "Capture an accessibility text snapshot of the current page. Shows page structure and interactive elements.",
+        "Capture an accessibility text snapshot of the current page. Returns interactive elements as @eN [role] references for use with click, fill, hover, etc.",
       parameters: Type.Object({}),
       async execute(
         _toolCallId: any,
@@ -1313,13 +1241,13 @@ ${hints.join("\n")}
         _onUpdate: any,
         _ctx: any,
       ) {
-        const page = await self._getOrCreatePuppeteerPage();
-        const a11y = await page.accessibility.snapshot({
-          interestingOnly: true,
-        });
-        const text = JSON.stringify(a11y, null, 2);
+        const page = await getPage();
+        const a11y = await page.accessibility.snapshot({ interestingOnly: true });
+        const lines = flattenA11y(a11y);
         return {
-          content: [{ type: "text" as const, text: text.substring(0, 15000) }],
+          content: [
+            { type: "text" as const, text: lines.join("\n").substring(0, 15000) },
+          ],
         };
       },
     };
@@ -1339,7 +1267,7 @@ ${hints.join("\n")}
         _ctx: any,
       ) {
         const { script } = params as { script: string };
-        const page = await self._getOrCreatePuppeteerPage();
+        const page = await getPage();
         const result = await page.evaluate(script);
         return {
           content: [
@@ -1356,7 +1284,8 @@ ${hints.join("\n")}
     const waitForTool = {
       name: "internal_browser_wait_for",
       label: "Wait for element",
-      description: "Wait for text or a CSS selector to appear on the page.",
+      description:
+        "Wait for text, a CSS selector, network idle, or a URL pattern. Note: 'load' state waits for the NEXT navigation to complete — if the page is already loaded it will time out.",
       parameters: Type.Object({
         text: Type.Optional(Type.String({ description: "Text to wait for" })),
         selector: Type.Optional(
@@ -1364,6 +1293,12 @@ ${hints.join("\n")}
         ),
         timeout: Type.Optional(
           Type.Integer({ description: "Max wait time in ms (default 10000)" }),
+        ),
+        state: Type.Optional(
+          Type.String({ description: "Wait state: 'networkidle' or 'load'" }),
+        ),
+        url: Type.Optional(
+          Type.String({ description: "URL glob pattern to wait for (e.g. **/dashboard)" }),
         ),
       }),
       async execute(
@@ -1373,45 +1308,92 @@ ${hints.join("\n")}
         _onUpdate: any,
         _ctx: any,
       ) {
-        const { text, selector, timeout } = params as {
+        const { text, selector, timeout, state, url } = params as {
           text?: string;
           selector?: string;
           timeout?: number;
+          state?: string;
+          url?: string;
         };
-        const page = await self._getOrCreatePuppeteerPage();
+        const page = await getPage();
         const ms = timeout ?? 10000;
-        if (selector) {
+        if (state === "networkidle") {
+          await page.waitForNetworkIdle({ timeout: ms });
+        } else if (state === "load") {
+          await page.waitForNavigation({ waitUntil: "load", timeout: ms });
+        } else if (url) {
+          await page.waitForFunction(
+            (pattern: string) => {
+              // Minimal glob: ** matches any path segment
+              const re = new RegExp(
+                "^" +
+                  pattern
+                    .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+                    .replace(/\*\*/g, ".*")
+                    .replace(/\*/g, "[^/]*") +
+                  "$",
+              );
+              return re.test(window.location.href);
+            },
+            { timeout: ms },
+            url,
+          );
+        } else if (selector) {
           await page.waitForSelector(selector, { timeout: ms });
         } else if (text) {
-          // Escape special chars that would break ::-p-text() pseudo-class
           const escaped = text.replace(/["()]/g, "\\$&");
           await page.waitForSelector(`::-p-text("${escaped}")`, {
             timeout: ms,
           });
         }
+        const what = url
+          ? `URL pattern "${url}"`
+          : state
+            ? `state "${state}"`
+            : String(selector ?? text);
         return {
           content: [
-            {
-              type: "text" as const,
-              text: `Wait satisfied for ${selector ?? text}`,
-            },
+            { type: "text" as const, text: `Wait satisfied for ${what}` },
+          ],
+        };
+      },
+    };
+
+    const getStateTool = {
+      name: "internal_browser_get_state",
+      label: "Get page state",
+      description: "Get the current page URL and title.",
+      parameters: Type.Object({}),
+      async execute(
+        _toolCallId: any,
+        _params: any,
+        _signal: any,
+        _onUpdate: any,
+        _ctx: any,
+      ) {
+        const page = await getPage();
+        const [url, title] = await Promise.all([page.url(), page.title()]);
+        return {
+          content: [
+            { type: "text" as const, text: JSON.stringify({ url, title }) },
           ],
         };
       },
     };
 
     return [
-      td(listPages),
-      td(newPage),
-      td(selectPage),
-      td(closePage),
       td(navigate),
       td(screenshot),
       td(clickTool),
-      td(typeTool),
+      td(fillTool),
+      td(scrollTool),
+      td(hoverTool),
+      td(selectTool),
+      td(pressTool),
       td(snapshotTool),
       td(evaluateTool),
       td(waitForTool),
+      td(getStateTool),
     ];
   }
 

@@ -105,18 +105,6 @@ export function getToolLabel(
   }
 
   // --- Browser tools ---
-  if (nameLower === "internal_browser_list_pages")
-    return t("tool.actionBrowserList");
-  if (nameLower === "internal_browser_new_page") {
-    const url = String(inp.url || "");
-    return url
-      ? t("tool.labelBrowserNew", { url })
-      : t("tool.actionBrowserNew");
-  }
-  if (nameLower === "internal_browser_select_page")
-    return t("tool.actionBrowserSelect");
-  if (nameLower === "internal_browser_close_page")
-    return t("tool.actionBrowserClose");
   if (nameLower === "internal_browser_navigate") {
     const url = String(inp.url || "");
     return url
@@ -131,11 +119,28 @@ export function getToolLabel(
       ? t("tool.labelBrowserClick", { selector })
       : t("tool.actionBrowserClick");
   }
-  if (nameLower === "internal_browser_type") {
+  if (nameLower === "internal_browser_fill") {
     const text = String(inp.text || "");
     return text
-      ? t("tool.labelBrowserType", { text })
-      : t("tool.actionBrowserType");
+      ? t("tool.labelBrowserFill", { text })
+      : t("tool.actionBrowserFill");
+  }
+  if (nameLower === "internal_browser_scroll") {
+    const dx = Number(inp.dx ?? 0);
+    const dy = Number(inp.dy ?? 0);
+    return t("tool.labelBrowserScroll", { dx, dy });
+  }
+  if (nameLower === "internal_browser_hover") {
+    const selector = String(inp.selector || "");
+    return t("tool.labelBrowserHover", { selector });
+  }
+  if (nameLower === "internal_browser_select") {
+    const value = String(inp.value || "");
+    return t("tool.labelBrowserSelect", { value });
+  }
+  if (nameLower === "internal_browser_press") {
+    const key = String(inp.key || "");
+    return t("tool.labelBrowserPress", { key });
   }
   if (nameLower === "internal_browser_snapshot")
     return t("tool.actionBrowserSnapshot");
@@ -153,6 +158,8 @@ export function getToolLabel(
       return t("tool.labelBrowserWaitSelector", { selector });
     return t("tool.actionBrowserWait");
   }
+  if (nameLower === "internal_browser_get_state")
+    return t("tool.actionBrowserGetState");
 
   return name;
 }
