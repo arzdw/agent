@@ -368,7 +368,6 @@ export const ContentBlockView = memo(function ContentBlockView({
           >
             <MessageMarkdown
               normalizedText={normalizedText}
-              isStreaming={isStreaming}
               components={markdownComponents}
             />
           </Suspense>

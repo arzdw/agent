@@ -19,13 +19,11 @@ const REHYPE_PLUGINS = [
 
 export interface MessageMarkdownProps {
   normalizedText: string;
-  isStreaming?: boolean;
   components?: Record<string, unknown>;
 }
 
 export const MessageMarkdown = memo(function MessageMarkdown({
   normalizedText,
-  isStreaming,
   components,
 }: MessageMarkdownProps) {
   return (
