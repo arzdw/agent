@@ -743,6 +743,10 @@
     "collapseInput": "收起输入框",
     "openCodeReview": "代码审查 · {{count}} 个文件变更"
   },
+  "steer": {
+    "label": "引导",
+    "eventLabel": "引导"
+  },
   "context": {
     "progress": "进度",
     "artifacts": "产物",

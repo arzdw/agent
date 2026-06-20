@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { ThinkingLevel, ProviderProfileKey } from "../types";
-import { Plus, ChevronDown, ArrowUp, Square, Maximize2, Minimize2 } from "lucide-react";
+import { Plus, ChevronDown, ArrowUp, Square, Maximize2, Minimize2, Target } from "lucide-react";
 
 export interface ModelOptionGroup {
   profileKey: ProviderProfileKey;
@@ -28,6 +28,8 @@ export interface ChatInputBottomBarProps {
   isSubmitting: boolean;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  onSteer?: () => void;
+  hasInput?: boolean;
 }
 
 export function ChatInputBottomBar({
@@ -49,6 +51,8 @@ export function ChatInputBottomBar({
   isSubmitting,
   isExpanded = false,
   onToggleExpand,
+  onSteer,
+  hasInput = false,
 }: ChatInputBottomBarProps) {
   const { t } = useTranslation();
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
@@ -259,6 +263,19 @@ export function ChatInputBottomBar({
             ) : (
               <Maximize2 className="w-4 h-4" />
             )}
+          </button>
+        )}
+
+        {/* Steering: one-click guidance injection when agent is running */}
+        {canStop && onSteer && hasInput && (
+          <button
+            type="button"
+            onClick={onSteer}
+            className="inline-flex items-center gap-1 h-9 px-2.5 rounded-full border border-border bg-surface text-text-secondary hover:bg-surface-hover hover:text-text-primary text-xs font-medium transition-colors"
+            title={t("steer.label")}
+          >
+            <Target className="w-3.5 h-3.5" />
+            <span>{t("steer.label")}</span>
           </button>
         )}
 

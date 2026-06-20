@@ -743,6 +743,10 @@
     "collapseInput": "Collapse input",
     "openCodeReview": "Code Review · {{count}} changed files"
   },
+  "steer": {
+    "label": "Steer",
+    "eventLabel": "Steer"
+  },
   "context": {
     "progress": "Progress",
     "artifacts": "Artifacts",

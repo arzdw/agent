@@ -27,6 +27,7 @@ import {
   ChevronsDown,
   ChevronDown,
   ChevronRight,
+  Target,
 } from "lucide-react";
 import { API_PROVIDER_PRESETS } from "../../shared/api-model-presets";
 import {
@@ -100,6 +101,7 @@ export function ChatView() {
   const activeTurn = useActiveTurn();
   const pendingTurns = usePendingTurns();
   const [timerTick, setTimerTick] = useState(0);
+  const [steeringEvent, setSteeringEvent] = useState<{ turnId: string; text: string } | null>(null);
 
   // Real-time elapsed timer for active turn
   useEffect(() => {
@@ -109,6 +111,13 @@ export function ChatView() {
     }
     const id = setInterval(() => setTimerTick((t) => t + 1), 200);
     return () => clearInterval(id);
+  }, [activeTurn?.turnId]);
+
+  // Clear steering event when active turn changes
+  useEffect(() => {
+    setSteeringEvent((prev) =>
+      prev && activeTurn && prev.turnId === activeTurn.turnId ? prev : null,
+    );
   }, [activeTurn?.turnId]);
 
   const activeTurnElapsedMs = useMemo(() => {
@@ -140,6 +149,8 @@ export function ChatView() {
   } = useIPC();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInputExpanded, setIsInputExpanded] = useState(false);
+  const [hasInput, setHasInput] = useState(false);
+  const isSteerRef = useRef(false);
   const [activeOperations, setActiveOperations] = useState<Operation[]>([]);
   const setGitChangeCount = useAppStore((s) => s.setGitChangeCount);
 
@@ -197,6 +208,7 @@ export function ChatView() {
   const pendingCount = pendingTurns.length;
   const isSessionRunning = activeSession?.status === "running";
   const canStop = isSessionRunning || hasActiveTurn || pendingCount > 0;
+
   const lastInputTokens = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const value = messages[i].tokenUsage?.totalPromptInput;
@@ -760,6 +772,28 @@ export function ChatView() {
   const handleSubmit = async (data: ChatInputSubmitData) => {
     if (!activeSessionId || isSubmitting) return;
 
+    const rawText = data.text.trim();
+    if (!rawText && data.images.length === 0 && data.files.length === 0) return;
+
+    // Steering path: ephemeral turn-level event (not a chat message)
+    if (isSteerRef.current) {
+      isSteerRef.current = false;
+      if (isElectron) {
+        window.electronAPI.send({
+          type: "session.steer",
+          payload: { sessionId: activeSessionId, prompt: rawText },
+        });
+      }
+      if (activeTurn?.turnId) {
+        setSteeringEvent({ turnId: activeTurn.turnId, text: rawText });
+      }
+      chatInputRef.current?.clear();
+      setHasInput(false);
+      setTimeout(() => chatInputRef.current?.focus(), 0);
+      return;
+    }
+
+    // Normal send path
     setIsSubmitting(true);
     try {
       const contentBlocks: ContentBlock[] = [];
@@ -790,10 +824,10 @@ export function ChatView() {
         });
       });
 
-      if (data.text.trim()) {
+      if (rawText) {
         contentBlocks.push({
           type: "text",
-          text: data.text.trim(),
+          text: rawText,
         });
       }
 
@@ -804,6 +838,7 @@ export function ChatView() {
         activeSession?.model,
       );
       chatInputRef.current?.clear();
+      setHasInput(false);
     } finally {
       setIsSubmitting(false);
       setTimeout(() => chatInputRef.current?.focus(), 0);
@@ -893,8 +928,6 @@ export function ChatView() {
     if (canStop) {
       if (activeSessionId) {
         stopSession(activeSessionId);
-        // Force-local UI recovery: if backend fails to send idle status
-        // (e.g. due to processQueue race), clear state immediately.
         updateSession(activeSessionId, { status: "idle" });
         clearActiveTurn(activeSessionId);
       }
@@ -902,6 +935,11 @@ export function ChatView() {
     }
     chatInputRef.current?.submit();
   };
+
+  const handleSteer = useCallback(() => {
+    isSteerRef.current = true;
+    chatInputRef.current?.submit();
+  }, []);
 
   const scrollToBottomByButton = () => {
     autoFollowRef.current = true;
@@ -1072,6 +1110,18 @@ export function ChatView() {
           </div>
         )}
 
+      {/* Steering event — ephemeral turn-level feedback */}
+      {steeringEvent && activeTurn && steeringEvent.turnId === activeTurn.turnId && (
+        <div>
+          <div className="max-w-[920px] mx-auto px-5 lg:px-8 py-2">
+            <div className="flex items-center gap-1.5 text-xs text-text-muted">
+              <Target className="w-3.5 h-3.5" />
+              <span>{t("steer.eventLabel")}: {steeringEvent.text}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="bg-transparent backdrop-blur-md">
         <div className="max-w-[760px] mx-auto">
@@ -1083,6 +1133,7 @@ export function ChatView() {
             onSubmit={handleSubmit}
             onCompact={handleCompact}
             onCommand={handleCommand}
+            onInputChange={setHasInput}
             disabled={isSubmitting || isCompacting}
             isExpanded={isInputExpanded}
             onToggleExpand={() => setIsInputExpanded((v) => !v)}
@@ -1150,6 +1201,8 @@ export function ChatView() {
                 isSubmitting={isSubmitting}
                 isExpanded={isInputExpanded}
                 onToggleExpand={() => setIsInputExpanded((v) => !v)}
+                onSteer={handleSteer}
+                hasInput={hasInput}
               />
             }
           />

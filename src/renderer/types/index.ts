@@ -450,6 +450,10 @@ export type ClientEvent =
       payload: { sessionId: string; instructions?: string };
     }
   | { type: "session.abortCompaction"; payload: { sessionId: string } }
+  | {
+      type: "session.steer";
+      payload: { sessionId: string; prompt: string };
+    }
   | { type: "session.delete"; payload: { sessionId: string } }
   | { type: "session.batchDelete"; payload: { sessionIds: string[] } }
   | { type: "session.archive"; payload: { sessionId: string } }

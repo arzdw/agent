@@ -3312,6 +3312,10 @@ async function handleClientEvent(event: ClientEvent): Promise<unknown> {
       sm.abortCompactionSession(event.payload.sessionId);
       return { success: true };
 
+    case "session.steer":
+      sm.steerSession(event.payload.sessionId, event.payload.prompt);
+      return { success: true };
+
     case "session.delete":
       return sm.deleteSession(event.payload.sessionId);
 

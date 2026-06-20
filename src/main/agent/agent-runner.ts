@@ -3120,6 +3120,13 @@ Tool routing:\n
           }
 
           switch (event.type) {
+            case "queue_update":
+              log(
+                "[AgentRunner] queue_update steering=%d followUp=%d",
+                event.steering.length,
+                event.followUp.length,
+              );
+              break;
             case "message_update": {
               if (controller.signal.aborted) break;
               const ame = event.assistantMessageEvent;
@@ -3575,11 +3582,16 @@ Tool routing:\n
         const promptResult =
           promptImages.length > 0
             ? await Promise.race([
-                piSession.prompt(finalPrompt, { images: promptImages }),
+                piSession.prompt(finalPrompt, {
+                  images: promptImages,
+                  streamingBehavior: "steer",
+                }),
                 abortPromise,
               ])
             : await Promise.race([
-                piSession.prompt(finalPrompt),
+                piSession.prompt(finalPrompt, {
+                  streamingBehavior: "steer",
+                }),
                 abortPromise,
               ]);
         log(
@@ -3780,6 +3792,18 @@ Tool routing:\n
         logWarn("[AgentRunner] pi session abort rejected:", e);
       });
     }
+  }
+
+  /** Inject a steering message during agent execution (SDK native steer). */
+  steer(sessionId: string, text: string): void {
+    const cached = this.piSessions.get(sessionId);
+    if (!cached) {
+      logWarn("[AgentRunner] steer: no active piSession for", sessionId);
+      return;
+    }
+    cached.session.steer(text)
+      .then(() => log("[AgentRunner] steer delivered:", text.substring(0, 80)))
+      .catch((e) => logError("[AgentRunner] steer failed:", e));
   }
 
   /** Manually compact the conversation for a session. */

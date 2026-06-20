@@ -44,6 +44,7 @@ interface ChatInputProps {
   onSubmit: (data: ChatInputSubmitData) => void;
   onCompact?: (instructions?: string) => void;
   onCommand?: (action: string) => void;
+  onInputChange?: (hasText: boolean) => void;
   disabled?: boolean;
   placeholder: string;
   cardClassName: string;
@@ -63,6 +64,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       onSubmit,
       onCompact,
       onCommand,
+      onInputChange,
       disabled = false,
       placeholder,
       cardClassName,
@@ -699,6 +701,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               value={prompt}
               onChange={(e) => {
                 const newValue = e.target.value;
+                onInputChange?.(newValue.trim().length > 0);
                 const textarea = textareaRef.current;
                 const isComposing = isComposingRef.current;
 

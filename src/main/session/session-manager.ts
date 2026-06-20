@@ -78,6 +78,7 @@ interface IAgentRunner {
   ): Promise<"compacted" | "already-compacted" | "skipped">;
   abortCompaction(sessionId: string): void;
   getExtensionCommands?(): { name: string; description: string }[];
+  steer?(sessionId: string, text: string): void;
 }
 
 const WORKSPACE_MOUNT_VIRTUAL_PATH = "/mnt/workspace";
@@ -1291,6 +1292,14 @@ export class SessionManager {
   abortCompactionSession(sessionId: string): void {
     if (!this.loadSession(sessionId)) throw new Error("Session not found");
     this.agentRunner.abortCompaction(sessionId);
+  }
+
+  /** Inject a steering message during agent execution. */
+  steerSession(sessionId: string, text: string): void {
+    if (!this.loadSession(sessionId)) throw new Error("Session not found");
+    // Steering is a turn-level ephemeral event, not a chat message —
+    // do not persist to DB. It lives in the live turn context only.
+    this.agentRunner.steer?.(sessionId, text);
   }
 
   // Delete a session
