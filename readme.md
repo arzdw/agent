@@ -2,53 +2,164 @@
   <img src="resources/logo.png" alt="Deskwand Logo" width="280" />
 </p>
 
-<h1 align="center">🚀 Deskwand: Your Personal AI Agent Desktop App</h1>
+# DeskWand
+
+**Delegate repetitive computer work to a local-first AI desktop agent.**
+
+DeskWand is an open-source desktop AI agent for Windows, macOS, and Linux.
+
+It helps you browse, use tools, create documents, connect AI models, and turn repeatable workflows into reusable skills — all from a desktop app you control.
 
 <p align="center">
-  • Deskwand • One-Click Install
-</p>
-
-<p align="center">
-  <a href="./README_zh.md">中文文档</a> •
-  <a href="#features">Features</a>
+  <a href="https://deskwand.com"><strong>Website</strong></a> ·
+  <a href="https://deskwand.com"><strong>Download</strong></a> ·
+  <a href="https://github.com/deskwand/agent/releases"><strong>Releases</strong></a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="Platform" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
-  <img src="https://img.shields.io/badge/Node.js-18+-brightgreen" alt="Node.js" />
-  <a href="https://deskwand.com" target="_blank"><img src="https://img.shields.io/badge/Website-deskwand.com-blue" alt="Website" /></a>
 </p>
 
 ---
 
-Deskwand is an open-source AI agent desktop app for Windows, macOS, and Linux. One-click install, bring your own API key — no coding required.
+## Contents
+
+- [Why DeskWand](#why-deskwand)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Example Tasks](#example-tasks)
+- [Models](#models)
+- [Skills](#skills)
+- [MCP](#mcp)
+- [Privacy & Security](#privacy--security)
+
 
 ---
 
-<a id="features"></a>
+## Why DeskWand?
 
-## ✨ Key Features
+Most AI apps stop at chat. DeskWand is built for action.
 
-- **🌐 Built-in Browser**: Browse the web, search for information, and interact with web pages directly inside Deskwand — no need to switch to an external browser.
-- **🧠 Auto-Learning Skills**: Deskwand learns from your workflows and automatically creates new skills to handle repetitive tasks, continuously expanding its capabilities.
-- **🚀 One-Click Install**: Pre-built installers for Windows (.exe), macOS (.dmg), and Linux (.AppImage). Also available via Homebrew. No terminal or coding knowledge required.
-- **🤖 Multi-Model Support**: Works with Claude, GPT, Gemini, DeepSeek, GLM, MiniMax, Kimi, and any OpenAI-compatible API. Bring your own API key.
-- **🧰 Built-in Skills**: Generate PPTX, DOCX, XLSX, and PDF documents with built-in workflows. Create custom skills with the skill-creator toolkit.
-- **🔌 MCP Tool Integration**: Connect to browsers, Notion, and desktop apps via Model Context Protocol. Extend AI capabilities beyond file management.
+Instead of only asking questions, you can delegate repetitive computer work:
+
+- collect information from websites
+- organize notes and documents
+- run recurring workflows
+- connect external tools
+- reuse learned skills across similar tasks
 
 ---
 
-## ❓ FAQ
+## Features
 
-**What is Deskwand?**
-Deskwand is an open-source AI agent desktop application for Windows, macOS, and Linux. It wraps AI models (Claude, GPT, Gemini, DeepSeek, etc.) into a user-friendly GUI with one-click installation — no terminal or coding knowledge required.
+### Desktop Agent
 
-**What AI models are supported?**
-Claude (via Anthropic or OpenRouter), OpenAI-compatible APIs, and Chinese models including GLM (Zhipu AI), MiniMax, and Kimi. Any provider offering an OpenAI-compatible API endpoint can be configured.
+- Runs as a desktop app
+- Supports Windows, macOS, and Linux
+- Designed for multi-step computer workflows
 
-**Is my data safe?**
-Deskwand runs entirely on your local machine. The only external communication is with the AI model API you configure. No data is sent to Deskwand servers.
+### Local-first Control
 
-**Does it work on Linux?**
-Yes. Deskwand provides pre-built AppImage installers for Linux (x64).
+- Bring your own model API key
+- Keep control of your configuration and workflow
+- No required DeskWand cloud account
+
+### Built-in Browser
+
+- Browse websites
+- Extract and summarize information
+- Use web pages as task context
+
+### Skills
+
+- Capture repeatable workflows
+- Reuse skills across similar tasks
+- Build a personal automation layer over time
+
+### MCP & Tools
+
+- Connect external tools through MCP
+- Extend DeskWand with custom capabilities
+- Integrate with your existing workflow
+
+### Multi-model Support
+
+- Connect to different AI model providers
+- Switch models based on task needs
+
+---
+
+## Installation
+
+Download the latest version:
+
+- macOS
+- Windows
+- Linux
+
+👉 [Download DeskWand](https://deskwand.com)
+
+Or download from [GitHub Releases](https://github.com/deskwand/agent/releases).
+
+---
+
+## Quick Start
+
+1. Download and install DeskWand
+2. Add your model API key
+3. Choose a model
+4. Ask DeskWand to complete a task
+5. Review and approve actions when needed
+
+---
+
+## Example Tasks
+
+Try asking DeskWand:
+
+- Research the top 5 alternatives to Linear and summarize them in a table.
+- Collect pricing information from these websites and create a comparison document.
+- Turn this recurring workflow into a reusable skill.
+- Draft a project update based on these notes.
+- Open the browser, check the latest release notes, and summarize what changed.
+
+---
+
+## Models
+
+DeskWand supports multiple AI model providers, including Claude (Anthropic), GPT (OpenAI), Gemini (Google), DeepSeek, GLM (Zhipu AI), MiniMax, Kimi, and any OpenAI-compatible API endpoint. Bring your own API key and switch models based on task needs.
+
+---
+
+## Skills
+
+Skills are reusable workflow templates that capture how to accomplish a specific type of task. DeskWand ships with built-in skills for document generation (PPTX, DOCX, XLSX, PDF) and web interaction, and you can create custom skills with the built-in skill-creator toolkit.
+
+---
+
+## MCP
+
+DeskWand supports the [Model Context Protocol](https://modelcontextprotocol.io) (MCP), allowing you to connect external tools and services — such as browsers, Notion, databases, and custom APIs — and extend the agent's capabilities beyond built-in features.
+
+---
+
+## Privacy & Security
+
+DeskWand is designed as a local-first desktop app.
+
+- Your model API key is configured locally
+- DeskWand does not require a DeskWand cloud account
+- Actions should be visible and reviewable by the user
+- You stay in control of connected tools and workflows
+
+Please review the source code and configuration before connecting sensitive accounts or tools.
+
+
+
+---
+
+<p align="center">
+  <a href="./README_zh.md">中文文档</a>
+</p>
