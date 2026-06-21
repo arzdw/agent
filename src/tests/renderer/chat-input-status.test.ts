@@ -93,4 +93,5 @@ describe("resolveInputStatus", () => {
       }),
     ).toEqual({ type: "compaction-success" });
   });
+
 });

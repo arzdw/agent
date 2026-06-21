@@ -1,3 +1,4 @@
+import { app } from "electron";
 import type { TSchema } from "@sinclair/typebox";
 import { Type } from "@sinclair/typebox";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
@@ -15,7 +16,9 @@ import type {
 
 // ─── Types ───────────────────────────────────────────────────────────
 
-type GoalStatus = "active" | "paused" | "complete" | "cleared";
+const MAX_GOAL_ITERATIONS = 50;
+
+type GoalStatus = "active" | "paused" | "complete" | "cleared" | "blocked" | "budget_limited";
 
 interface GoalState {
   objective: string;
@@ -24,6 +27,8 @@ interface GoalState {
   firstTurnDone: boolean;
   tokenBudget?: number;
   tokensUsed: number;
+  timeBudgetSeconds?: number;
+  timeUsedSeconds: number;
   startedAt: number;
   endedAt?: number;
 }
@@ -31,47 +36,142 @@ interface GoalState {
 // ─── Prompt templates ────────────────────────────────────────────────
 
 function buildGoalSystemPrompt(goal: GoalState): string {
-  const budgetLine = goal.tokenBudget
-    ? `Token budget: ${Math.round(goal.tokensUsed).toLocaleString()} / ${goal.tokenBudget.toLocaleString()}`
-    : "No token budget set.";
-  return `# Active Goal
-You are working toward the following objective:
-<goal_objective>${goal.objective}</goal_objective>
-${budgetLine}
-When you have completed the objective, call the \`goal_complete\` tool with a brief summary.
-Do not mark the goal as complete unless you have verified the actual outcome.`;
+  const lines = [`## Active Goal`];
+  lines.push(`Objective: ${goal.objective}`);
+  if (goal.tokenBudget) {
+    lines.push(`Token used: ${Math.round(goal.tokensUsed).toLocaleString()} / ${goal.tokenBudget.toLocaleString()}`);
+  }
+  if (goal.timeBudgetSeconds) {
+    const elapsed = (Date.now() - goal.startedAt) / 1000;
+    lines.push(`Time used: ${formatDuration(elapsed)} / ${formatDuration(goal.timeBudgetSeconds)}`);
+  }
+  lines.push(
+    `When the objective is fully achieved, call \`update_goal\` with status "complete" and a brief summary.`,
+    `Do not mark the goal complete without concrete evidence.`,
+    ``,
+    `== Completion Audit ==`,
+    `Before calling update_goal complete, verify EVERY requirement:`,
+    `- Derive concrete requirements from the objective. Do not shrink scope.`,
+    `- For each requirement, find authoritative evidence (file content, command output, test results).`,
+    `- Treat uncertain or indirect evidence as NOT achieved — keep working.`,
+    `- Completion is proven only when ALL requirements have verifiable evidence.`,
+    ``,
+    `== Blocked Audit ==`,
+    `- Do NOT call update_goal with status "blocked" the first time a blocker appears.`,
+    `- Only use "blocked" when the SAME blocking condition has repeated for 3+ consecutive goal turns.`,
+    `- Once the threshold is met, call update_goal blocked immediately — do not keep reporting.`,
+    `- Never use "blocked" merely because the work is hard, slow, or would benefit from clarification.`,
+  );
+  return lines.join("\n");
 }
 
 function buildContinuePrompt(goal: GoalState): string {
-  return `Continue working toward the active goal.
-<goal_objective>${goal.objective}</goal_objective>
+  return `Continue working toward the active goal: ${goal.objective}
 This is automatic continuation #${goal.iteration}.
-- Make concrete progress toward the objective.
-- Verify completion against the actual current state before calling goal_complete.
-- If you encounter a persistent obstacle, call goal_complete with a description of what remains.`;
+Make concrete progress. Verify completion against the actual current state before calling update_goal.
+If the SAME obstacle repeats for 3+ consecutive turns, call update_goal with status "blocked".`;
+}
+
+function buildBudgetLimitedPrompt(goal: GoalState, reason: "token" | "time"): string {
+  let used: string;
+  let limit: string;
+  if (goal.tokenBudget && (reason === "token" || !goal.timeBudgetSeconds)) {
+    used = `${Math.round(goal.tokensUsed).toLocaleString()} tokens`;
+    limit = `${goal.tokenBudget.toLocaleString()} tokens`;
+  } else {
+    used = `${formatDuration(goal.timeUsedSeconds)}`;
+    limit = `${formatDuration(goal.timeBudgetSeconds!)}`;
+  }
+  return `The goal has reached its ${reason} budget (${used} / ${limit}).
+Do not start new substantive work. Summarize progress, identify remaining work or blockers, and leave a clear next step.
+If the goal is actually complete, call update_goal with status "complete". Otherwise the system will pause the goal after this turn.`;
 }
 
 function buildStartPrompt(goal: GoalState): string {
-  return `Work toward the following goal:
-<goal_objective>${goal.objective}</goal_objective>
-Make concrete progress. When done, call the \`goal_complete\` tool.`;
+  return `Work toward the following goal: ${goal.objective}
+Make concrete progress. When done, call update_goal with status "complete".
+Use get_goal to check your current budget consumption at any time.`;
 }
 
 function buildResumePrompt(goal: GoalState): string {
-  return `Resume working toward the active goal:
-<goal_objective>${goal.objective}</goal_objective>
+  return `Resume working toward the active goal: ${goal.objective}
 This is turn #${goal.iteration}. Pick up where you left off.`;
 }
 
-// ─── Goal complete tool ──────────────────────────────────────────────
+// ─── Goal tools ─────────────────────────────────────────────────────
 
-const GoalCompleteSchema = Type.Object({
+const UpdateGoalSchema = Type.Object({
+  status: Type.String({
+    description: "New goal status. Only 'complete' or 'blocked' allowed.",
+  }),
   summary: Type.String({
-    description: "Brief summary of what was accomplished.",
+    description: "Brief summary of what was accomplished (complete) or what blocks progress (blocked).",
   }),
 });
 
-type GoalCompleteInput = { summary: string };
+type UpdateGoalInput = { status: "complete" | "blocked"; summary: string };
+
+// ─── Locale messages ────────────────────────────────────────────────
+
+const MSG: Record<string, Record<string, string>> = {
+  zh: {
+    noActiveGoal: "没有活跃的目标。",
+    noGoalToPause: "没有可暂停的目标。",
+    noGoalToResume: "没有可恢复的目标。",
+    noGoalToClear: "没有可清除的目标。",
+    alreadyActive: "目标已在执行中。",
+    started: "目标已启动: {{objective}}{{budget}}",
+    paused: "目标已暂停: {{objective}}",
+    resumed: "目标已恢复: {{objective}}",
+    cleared: "目标已清除。",
+    needObjective: "请提供一个目标描述。",
+    goalIsStatus: "目标状态为 {{status}}，请用 /goal <目标> 创建新目标。",
+    statusActive: "🎯 执行中 (第{{n}}轮): {{objective}}{{budget}}",
+    statusPaused: "⏸ 已暂停: {{objective}}",
+    statusComplete: "✅ 已完成: {{objective}}",
+    statusBlocked: "🚫 已阻塞: {{objective}}",
+    statusBudgetLimited: "💸 预算耗尽: {{objective}}{{budget}}",
+  },
+  en: {
+    noActiveGoal: "No active goal.",
+    noGoalToPause: "No active goal to pause.",
+    noGoalToResume: "No goal to resume.",
+    noGoalToClear: "No goal to clear.",
+    alreadyActive: "Goal is already active.",
+    started: "Goal started: {{objective}}{{budget}}",
+    paused: "Goal paused: {{objective}}",
+    resumed: "Goal resumed: {{objective}}",
+    cleared: "Goal cleared.",
+    needObjective: "Please provide a goal objective.",
+    goalIsStatus: "Goal is {{status}}; start a new one with /goal <objective>.",
+    statusActive: "🎯 Goal active (turn {{n}}): {{objective}}{{budget}}",
+    statusPaused: "⏸ Goal paused: {{objective}}",
+    statusComplete: "✅ Goal complete: {{objective}}",
+    statusBlocked: "🚫 Goal blocked: {{objective}}",
+    statusBudgetLimited: "💸 Goal budget exhausted: {{objective}}{{budget}}",
+  },
+};
+
+function getLocale(): string {
+  try {
+    const l = app.getLocale();
+    return l.startsWith("zh") ? "zh" : "en";
+  } catch {
+    return "en";
+  }
+}
+
+function msg(
+  key: string,
+  params?: Record<string, string | number>,
+): string {
+  const locale = getLocale();
+  const tpl = MSG[locale]?.[key] || MSG.en[key] || key;
+  if (!params) return tpl;
+  return tpl.replace(/\{\{(\w+)\}\}/g, (_, k) =>
+    params[k] !== undefined ? String(params[k]) : `{{${k}}}`,
+  );
+}
 
 // ─── Extension ───────────────────────────────────────────────────────
 
@@ -81,12 +181,8 @@ export class GoalExtension implements AgentRuntimeExtension {
   /** Goal state keyed by sessionId, so multiple sessions do not interfere. */
   private goals: Map<string, GoalState> = new Map();
 
-  /**
-   * Per-session goal_complete tool.
-   * Each tool captures its own sessionId in the execute closure so the
-   * correct goal is completed regardless of which session the Agent runs in.
-   */
-  private goalCompleteTools: Map<string, AgentRuntimeCustomTool> = new Map();
+  /** Per-session goal tools (get_goal, update_goal). */
+  private goalTools: Map<string, AgentRuntimeCustomTool[]> = new Map();
 
   // ── helpers ──────────────────────────────────────────────────────
 
@@ -100,7 +196,7 @@ export class GoalExtension implements AgentRuntimeExtension {
 
   private deleteGoal(sessionId: string): void {
     this.goals.delete(sessionId);
-    this.goalCompleteTools.delete(sessionId);
+    this.goalTools.delete(sessionId);
   }
 
   private updateGoalUsage(sessionId: string, ctx: AfterSessionRunContext): void {
@@ -130,21 +226,49 @@ export class GoalExtension implements AgentRuntimeExtension {
         iteration: goal.iteration,
         tokensUsed: goal.tokensUsed,
         tokenBudget: goal.tokenBudget,
+        timeUsedSeconds: goal.timeUsedSeconds,
+        timeBudgetSeconds: goal.timeBudgetSeconds,
       },
     };
   }
 
-  /** Ensure a per-session goal_complete tool exists, creating it if needed. */
-  private ensureGoalCompleteTool(sessionId: string): AgentRuntimeCustomTool {
-    let tool = this.goalCompleteTools.get(sessionId);
-    if (!tool) {
-      const sid = sessionId; // capture for closure
-      tool = {
-        name: "goal_complete",
-        label: "Goal Complete",
+  /** Ensure per-session goal tools exist, creating them if needed.
+   *  Exposes `get_goal` and `update_goal` to the model. */
+  private ensureGoalTools(sessionId: string): AgentRuntimeCustomTool[] {
+    let tools = this.goalTools.get(sessionId);
+    if (!tools) {
+      const sid = sessionId;
+      const self = this;
+
+      // ── get_goal ──
+      const getGoal: AgentRuntimeCustomTool = {
+        name: "get_goal",
+        label: "Get Goal",
         description:
-          "Mark the active goal as complete. Call this when you have verified the goal objective has been achieved.",
-        parameters: GoalCompleteSchema as TSchema,
+          "Read the current goal status: objective, tokens used, time used, budget remaining.",
+        parameters: Type.Object({}) as unknown as TSchema,
+        execute: async () => {
+          const goal = self.getGoal(sid);
+          if (!goal) return { content: [{ type: "text" as const, text: "No active goal." }], details: {} };
+          const remaining = goal.tokenBudget ? Math.max(0, goal.tokenBudget - goal.tokensUsed).toString() : "unlimited";
+          const info = [
+            `Objective: ${goal.objective}`,
+            `Status: ${goal.status}`,
+            `Turn: ${goal.iteration}`,
+            `Tokens used: ${Math.round(goal.tokensUsed).toLocaleString()}${goal.tokenBudget ? ` / ${goal.tokenBudget.toLocaleString()} (${remaining} remaining)` : " (no budget)"}`,
+            `Time used: ${formatDuration(goal.timeUsedSeconds)}${goal.timeBudgetSeconds ? ` / ${formatDuration(goal.timeBudgetSeconds)}` : " (no budget)"}`,
+          ];
+          return { content: [{ type: "text" as const, text: info.join("\n") }], details: {} };
+        },
+      };
+
+      // ── update_goal ──
+      const updateGoal: AgentRuntimeCustomTool = {
+        name: "update_goal",
+        label: "Update Goal",
+        description:
+          "Update the goal status. Use 'complete' when verified, 'blocked' only after 3+ consecutive turns with the same obstacle.",
+        parameters: UpdateGoalSchema as TSchema,
         execute: async (
           _toolCallId: string,
           params: unknown,
@@ -152,48 +276,80 @@ export class GoalExtension implements AgentRuntimeExtension {
           _onUpdate: unknown,
           _ctx: ExtensionContext,
         ) => {
-          const parsed = params as GoalCompleteInput;
-          const text = await this.executeGoalComplete(sid, parsed);
-          return { content: [{ type: "text" as const, text }], details: {} };
+          const parsed = params as UpdateGoalInput;
+          const goal = self.getGoal(sid);
+          if (!goal || (goal.status !== "active" && goal.status !== "budget_limited")) {
+            return { content: [{ type: "text" as const, text: "There is no active goal to update." }], details: {} };
+          }
+          if (parsed.status === "complete") {
+            goal.status = "complete";
+            goal.endedAt = Date.now();
+            return { content: [{ type: "text" as const, text: `Goal marked complete. Summary: ${parsed.summary}` }], details: {} };
+          }
+          if (parsed.status === "blocked") {
+            goal.status = "blocked";
+            goal.endedAt = Date.now();
+            return { content: [{ type: "text" as const, text: `Goal marked blocked. Reason: ${parsed.summary}` }], details: {} };
+          }
+          return { content: [{ type: "text" as const, text: `Invalid status: ${parsed.status}. Only 'complete' or 'blocked' allowed.` }], details: {} };
         },
       };
-      this.goalCompleteTools.set(sid, tool);
+
+      // ── goal_complete (backward compat, delegates to update_goal logic) ──
+      const goalComplete: AgentRuntimeCustomTool = {
+        name: "goal_complete",
+        label: "Goal Complete",
+        description:
+          "Mark the active goal as complete. Prefer update_goal with status 'complete' instead.",
+        parameters: Type.Object({
+          summary: Type.String({ description: "Brief summary of what was accomplished." }),
+        }) as TSchema,
+        execute: async (
+          _toolCallId: string,
+          params: unknown,
+          _signal: AbortSignal | undefined,
+          _onUpdate: unknown,
+          _ctx: ExtensionContext,
+        ) => {
+          const parsed = params as { summary: string };
+          const goal = self.getGoal(sid);
+          if (!goal || (goal.status !== "active" && goal.status !== "budget_limited")) {
+            return { content: [{ type: "text" as const, text: "There is no active goal to complete." }], details: {} };
+          }
+          goal.status = "complete";
+          goal.endedAt = Date.now();
+          return { content: [{ type: "text" as const, text: `Goal marked complete. Summary: ${parsed.summary}` }], details: {} };
+        },
+      };
+
+      tools = [getGoal, updateGoal, goalComplete];
+      this.goalTools.set(sid, tools);
     }
-    return tool;
+    return tools;
   }
-
-  // ── goal_complete tool execution ─────────────────────────────────
-
-  private async executeGoalComplete(
-    sessionId: string,
-    input: GoalCompleteInput,
-  ): Promise<string> {
-    const goal = this.getGoal(sessionId);
-    if (!goal || goal.status !== "active") {
-      return "There is no active goal to complete.";
-    }
-    goal.status = "complete";
-    goal.endedAt = Date.now();
-    return `Goal marked as complete. Summary: ${input.summary}`;
-  }
-
-  // ── commands ─────────────────────────────────────────────────────
 
   private showStatus(sessionId: string): CommandResult {
     const goal = this.getGoal(sessionId);
     if (!goal || goal.status === "cleared") {
-      return { handled: true, message: "No active goal." };
+      return { handled: true, message: msg("noActiveGoal") };
     }
 
-    const budgetStr = goal.tokenBudget
-      ? ` | token: ${Math.round(goal.tokensUsed).toLocaleString()} / ${goal.tokenBudget.toLocaleString()}`
-      : "";
+    const parts: string[] = [];
+    if (goal.tokenBudget) {
+      parts.push(`token: ${Math.round(goal.tokensUsed).toLocaleString()} / ${goal.tokenBudget.toLocaleString()}`);
+    }
+    if (goal.timeBudgetSeconds) {
+      parts.push(`time: ${formatDuration(goal.timeUsedSeconds)} / ${formatDuration(goal.timeBudgetSeconds)}`);
+    }
+    const budgetStr = parts.length ? ` | ${parts.join(", ")}` : "";
 
     const statusMap: Record<GoalStatus, string> = {
-      active: `🎯 Goal active (turn ${goal.iteration}): ${goal.objective}${budgetStr}`,
-      paused: `⏸ Goal paused: ${goal.objective}`,
-      complete: `✅ Goal complete: ${goal.objective}`,
-      cleared: "No active goal.",
+      active: msg("statusActive", { n: goal.iteration, objective: goal.objective, budget: budgetStr }),
+      paused: msg("statusPaused", { objective: goal.objective }),
+      complete: msg("statusComplete", { objective: goal.objective }),
+      cleared: msg("noActiveGoal"),
+      blocked: msg("statusBlocked", { objective: goal.objective }),
+      budget_limited: msg("statusBudgetLimited", { objective: goal.objective, budget: budgetStr }),
     };
 
     return {
@@ -207,10 +363,11 @@ export class GoalExtension implements AgentRuntimeExtension {
     sessionId: string,
     objective: string,
     tokenBudget?: number,
+    timeBudgetSeconds?: number,
   ): CommandResult {
     const normalized = objective.trim();
     if (!normalized) {
-      return { handled: true, message: "Please provide a goal objective." };
+      return { handled: true, message: msg("needObjective") };
     }
 
     const existing = this.getGoal(sessionId);
@@ -225,18 +382,21 @@ export class GoalExtension implements AgentRuntimeExtension {
       firstTurnDone: false,
       tokenBudget,
       tokensUsed: 0,
+      timeBudgetSeconds,
+      timeUsedSeconds: 0,
       startedAt: Date.now(),
     };
     this.setGoal(sessionId, goal);
 
     const firstTurnPrompt = buildStartPrompt(goal);
-    const budgetNote = tokenBudget
-      ? ` (token budget: ${tokenBudget.toLocaleString()})`
-      : "";
+    const notes: string[] = [];
+    if (tokenBudget) notes.push(`token budget: ${tokenBudget.toLocaleString()}`);
+    if (timeBudgetSeconds) notes.push(`time budget: ${formatDuration(timeBudgetSeconds)}`);
+    const budgetNote = notes.length ? ` (${notes.join(", ")})` : "";
 
     return {
       handled: true,
-      message: `Goal started: ${normalized}${budgetNote}`,
+      message: msg("started", { objective: normalized, budget: budgetNote }),
       firstTurnPrompt,
       goalStatus: this.goalStatusPayload(goal).goalStatus,
     };
@@ -245,12 +405,12 @@ export class GoalExtension implements AgentRuntimeExtension {
   private pauseGoal(sessionId: string): CommandResult {
     const goal = this.getGoal(sessionId);
     if (!goal || goal.status !== "active") {
-      return { handled: true, message: "No active goal to pause." };
+      return { handled: true, message: msg("noGoalToPause") };
     }
     goal.status = "paused";
     return {
       handled: true,
-      message: `Goal paused: ${goal.objective}`,
+      message: msg("paused", { objective: goal.objective }),
       goalStatus: this.goalStatusPayload(goal).goalStatus,
     };
   }
@@ -258,23 +418,23 @@ export class GoalExtension implements AgentRuntimeExtension {
   private resumeGoal(sessionId: string): CommandResult {
     const goal = this.getGoal(sessionId);
     if (!goal) {
-      return { handled: true, message: "No goal to resume." };
+      return { handled: true, message: msg("noGoalToResume") };
     }
     if (goal.status === "complete" || goal.status === "cleared") {
       return {
         handled: true,
-        message: `Goal is ${goal.status}; start a new one with /goal <objective>.`,
+        message: msg("goalIsStatus", { status: goal.status }),
       };
     }
     if (goal.status === "active") {
-      return { handled: true, message: "Goal is already active." };
+      return { handled: true, message: msg("alreadyActive") };
     }
 
     goal.status = "active";
     const firstTurnPrompt = buildResumePrompt(goal);
     return {
       handled: true,
-      message: `Goal resumed: ${goal.objective}`,
+      message: msg("resumed", { objective: goal.objective }),
       firstTurnPrompt,
       goalStatus: this.goalStatusPayload(goal).goalStatus,
     };
@@ -283,12 +443,12 @@ export class GoalExtension implements AgentRuntimeExtension {
   private clearGoal(sessionId: string): CommandResult {
     const goal = this.getGoal(sessionId);
     if (!goal) {
-      return { handled: true, message: "No goal to clear." };
+      return { handled: true, message: msg("noGoalToClear") };
     }
     this.deleteGoal(sessionId);
     return {
       handled: true,
-      message: `Goal cleared.`,
+      message: msg("cleared"),
       goalStatus: { status: "cleared" },
     };
   }
@@ -314,15 +474,34 @@ export class GoalExtension implements AgentRuntimeExtension {
       return this.clearGoal(sessionId);
     }
 
-    const tokensMatch = args.match(
-      /^--tokens\s+(\d+(?:\.?\d*)?[km]?)\s+(.+)/i,
-    );
-    if (tokensMatch) {
-      const budget = parseTokenBudget(tokensMatch[1]);
-      return this.startGoal(sessionId, tokensMatch[2].trim(), budget);
+    // Parse --time and --tokens flags (order-independent, both optional).
+    // Extract all flags first, then consume remaining text as the objective.
+    let objective = args.trim();
+    let tokenBudget: number | undefined;
+    let timeBudgetSeconds: number | undefined;
+
+    // Loop to strip flags regardless of order.
+    for (;;) {
+      const tokensMatch = objective.match(/^--tokens\s+(\d+(?:\.?\d*)?[km]?)(?:\s+(.+))?/i);
+      if (tokensMatch) {
+        tokenBudget = parseTokenBudget(tokensMatch[1]);
+        objective = (tokensMatch[2] ?? "").trim();
+        continue;
+      }
+      const timeMatch = objective.match(/^--time\s+(\d+(?:\.?\d*)?[smh])(?:\s+(.+))?/i);
+      if (timeMatch) {
+        timeBudgetSeconds = parseTimeBudget(timeMatch[1]);
+        objective = (timeMatch[2] ?? "").trim();
+        continue;
+      }
+      break;
     }
 
-    return this.startGoal(sessionId, args.trim());
+    if (tokenBudget !== undefined || timeBudgetSeconds !== undefined) {
+      return this.startGoal(sessionId, objective, tokenBudget, timeBudgetSeconds);
+    }
+
+    return this.startGoal(sessionId, objective);
   }
 
   async beforeSessionRun(
@@ -341,8 +520,8 @@ export class GoalExtension implements AgentRuntimeExtension {
     goal.firstTurnDone = true;
 
     const promptPrefix = buildGoalSystemPrompt(goal);
-    const tool = this.ensureGoalCompleteTool(sessionId);
-    return { promptPrefix, customTools: [tool] };
+    const tools = this.ensureGoalTools(sessionId);
+    return { promptPrefix, customTools: tools };
   }
 
   async afterSessionRun(
@@ -352,10 +531,8 @@ export class GoalExtension implements AgentRuntimeExtension {
     const goal = this.getGoal(sessionId);
 
     if (!goal || goal.status !== "active") {
-      if (goal?.status === "complete") {
+      if (goal?.status === "complete" || goal?.status === "blocked") {
         const payload = this.goalStatusPayload(goal);
-        // Delete after reporting so completed status is not re-broadcast
-        // on every subsequent turn / user message in this session.
         this.deleteGoal(sessionId);
         return payload;
       }
@@ -366,13 +543,33 @@ export class GoalExtension implements AgentRuntimeExtension {
     }
 
     this.updateGoalUsage(sessionId, ctx);
+    // Update wall-clock time
+    goal.timeUsedSeconds = (Date.now() - goal.startedAt) / 1000;
 
+    // ── Guardrail 1: max iterations ──
+    if (goal.iteration >= MAX_GOAL_ITERATIONS) {
+      goal.status = "paused";
+      return this.goalStatusPayload(goal);
+    }
+
+    // ── Guardrail 2: time budget ──
+    if (
+      goal.timeBudgetSeconds !== undefined &&
+      goal.timeUsedSeconds >= goal.timeBudgetSeconds
+    ) {
+      goal.status = "budget_limited";
+      const continuePrompt = buildBudgetLimitedPrompt(goal, "time");
+      return { continuePrompt, ...this.goalStatusPayload(goal) };
+    }
+
+    // ── Guardrail 3: token budget (budget_limited for one more turn, not immediate pause) ──
     if (
       goal.tokenBudget !== undefined &&
       goal.tokensUsed >= goal.tokenBudget
     ) {
-      goal.status = "paused";
-      return this.goalStatusPayload(goal);
+      goal.status = "budget_limited";
+      const continuePrompt = buildBudgetLimitedPrompt(goal, "token");
+      return { continuePrompt, ...this.goalStatusPayload(goal) };
     }
 
     if (goal.status !== "active") {
@@ -397,4 +594,22 @@ function parseTokenBudget(raw: string): number | undefined {
   if (normalized.endsWith("k")) return Math.round(num * 1_000);
   if (normalized.endsWith("m")) return Math.round(num * 1_000_000);
   return Math.round(num);
+}
+
+function parseTimeBudget(raw: string): number | undefined {
+  const normalized = raw.trim().toLowerCase();
+  const num = parseFloat(normalized);
+  if (isNaN(num)) return undefined;
+  if (normalized.endsWith("s")) return Math.round(num);
+  if (normalized.endsWith("m")) return Math.round(num * 60);
+  if (normalized.endsWith("h")) return Math.round(num * 3600);
+  return Math.round(num * 60); // default to minutes
+}
+
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.round((seconds % 3600) / 60);
+  return m > 0 ? `${h}h${m}m` : `${h}h`;
 }

@@ -10,9 +10,10 @@ import {
 } from "lucide-react";
 import { useAppStore } from "../../store";
 import {
+  formatCollapsedToolSummary,
+  getCollapsedToolSummary,
   shouldPreferToolResultImages,
   shouldRenderToolResultText,
-  shouldUseScreenshotSummary,
 } from "../../utils/tool-result-summary";
 import type {
   ToolUseContent,
@@ -96,32 +97,20 @@ export const ToolUseBlock = memo(function ToolUseBlock({
   const hasActiveTurn = Boolean(activeTurn);
   const isRunning = !toolResult && hasActiveTurn;
   const isError = toolResult?.isError === true;
-  const isSuccess = toolResult && !isError;
 
   const label = getToolLabel(block.name, block.input, t);
   const isMCPTool = block.name.startsWith("mcp__");
   const mcpServerName = isMCPTool
     ? block.name.match(/^mcp__(.+?)__/)?.[1]
     : null;
+  const collapsedSummary = getCollapsedToolSummary(
+    block.name,
+    toolResult?.content,
+    isError,
+    Boolean(toolResult),
+  );
+  const collapsedSummaryText = formatCollapsedToolSummary(collapsedSummary, t);
 
-  const getSummary = (): string => {
-    if (!toolResult) return "";
-    const content =
-      typeof toolResult.content === "string" ? toolResult.content : "";
-    if (toolResult.isError) {
-      const firstLine = content.split(/\r?\n/)[0];
-      return firstLine.length > 60
-        ? firstLine.substring(0, 57) + "..."
-        : firstLine;
-    }
-    if (shouldUseScreenshotSummary(block.name, content))
-      return t("tool.summaryScreenshot");
-    if (content.length < 60) return content.trim();
-    const lines = content.trim().split(/\r?\n/);
-    return t("tool.summaryLines", { count: lines.length });
-  };
-
-  const summary = getSummary();
   const validImages =
     toolResult?.images?.filter(
       (image) =>
@@ -154,6 +143,19 @@ export const ToolUseBlock = memo(function ToolUseBlock({
     );
     duration = resultStep?.duration;
   }
+  const durationText =
+    duration === undefined
+      ? null
+      : duration < 1000
+        ? `${duration}ms`
+        : `${(duration / 1000).toFixed(1)}s`;
+  const expandedMetaItems = [
+    durationText,
+    validImages.length > 0
+      ? t("tool.metaImages", { count: validImages.length })
+      : null,
+    isMCPTool && mcpServerName ? mcpServerName : null,
+  ].filter((value): value is string => Boolean(value));
 
   return (
     <div
@@ -164,11 +166,12 @@ export const ToolUseBlock = memo(function ToolUseBlock({
       {/* Header — always visible */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2.5 py-2 pr-3 text-left hover:bg-surface-hover/50 transition-colors"
+        aria-expanded={expanded}
+        className="group w-full flex items-start gap-2.5 py-2 pr-3 text-left hover:bg-surface-hover/50 transition-colors"
       >
         {/* Status icon */}
         <div
-          className={`flex-shrink-0 ${
+          className={`flex-shrink-0 pt-0.5 ${
             isError
               ? "text-error"
               : isRunning
@@ -186,52 +189,49 @@ export const ToolUseBlock = memo(function ToolUseBlock({
         </div>
 
         {/* Tool icon */}
-        <div className="flex-shrink-0 text-text-muted">
+        <div className="flex-shrink-0 pt-0.5 text-text-muted">
           {getToolIcon(block.name)}
         </div>
 
-        {/* Label */}
-        <span className="text-xs font-mono text-text-secondary truncate flex-1 min-w-0">
-          {label}
-        </span>
-
-        {/* MCP badge */}
-        {isMCPTool && mcpServerName && (
-          <span className="px-1.5 py-0.5 text-xs rounded-md bg-mcp/15 text-mcp flex-shrink-0 font-medium">
-            {mcpServerName}
+        {/* Content cluster */}
+        <div className="min-w-0 flex flex-1 flex-wrap items-baseline gap-x-1 gap-y-0.5">
+          <span className="min-w-0 max-w-full truncate text-xs font-mono text-text-secondary">
+            {label}
           </span>
-        )}
-
-        {/* Summary / duration */}
-        {isSuccess && summary && !expanded && (
-          <span className="text-xs text-text-muted truncate max-w-[180px] flex-shrink-0">
-            {summary}
+          {!isRunning && collapsedSummaryText && (
+            <span
+              className={`whitespace-nowrap text-xs ${
+                isError ? "text-error" : "text-text-muted"
+              }`}
+            >
+              · {collapsedSummaryText}
+            </span>
+          )}
+          <span
+            className={`inline-flex w-3.5 flex-shrink-0 items-center justify-center self-center text-text-muted transition-opacity ${
+              expanded
+                ? "opacity-100"
+                : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+            }`}
+          >
+            {expanded ? (
+              <ChevronDown className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5" />
+            )}
           </span>
-        )}
-        {validImages.length > 0 && (
-          <span className="text-xs text-text-muted flex-shrink-0">
-            {t("tool.badgeImages", { count: validImages.length })}
-          </span>
-        )}
-        {duration !== undefined && (
-          <span className="text-xs text-text-muted flex-shrink-0 tabular-nums">
-            {duration < 1000
-              ? `${duration}ms`
-              : `${(duration / 1000).toFixed(1)}s`}
-          </span>
-        )}
-
-        {/* Chevron */}
-        {expanded ? (
-          <ChevronDown className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
-        ) : (
-          <ChevronRight className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
-        )}
+        </div>
       </button>
 
       {/* Expanded content */}
       {expanded && (
         <div className="animate-fade-in bg-background/35">
+          {expandedMetaItems.length > 0 && (
+            <div className="px-3 pt-2 text-xs text-text-muted">
+              {expandedMetaItems.join(" · ")}
+            </div>
+          )}
+
           {/* Input section */}
           <div className="px-3 py-2">
             <div className="text-xs uppercase tracking-wider text-text-muted font-medium mb-1">

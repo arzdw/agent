@@ -108,3 +108,7 @@ website/.vitepress/cache/
 !website/public/*.png
 !resources/social-preview.png
 !resources/logo.png
+.superpowers/
+
+# codegraph
+.codegraph/

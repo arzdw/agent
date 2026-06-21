@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronRight, XCircle, CheckCircle2 } from "lucide-react";
 import { useAppStore } from "../../store";
 import {
+  formatCollapsedToolSummary,
+  getCollapsedToolSummary,
   shouldPreferToolResultImages,
   shouldRenderToolResultText,
-  shouldUseScreenshotSummary,
 } from "../../utils/tool-result-summary";
 import type {
   ToolResultContent,
@@ -80,24 +81,18 @@ export const ToolResultBlock = memo(function ToolResultBlock({
   }
 
   const isMCPTool = toolName?.startsWith("mcp__") || false;
+  const mcpServerName = isMCPTool
+    ? (toolName || "").match(/^mcp__(.+?)__(.+)$/)?.[1] || null
+    : null;
   const displayName = isMCPTool
     ? (toolName || "").match(/^mcp__(.+?)__(.+)$/)?.[2] || toolName || "tool"
     : toolName || "tool";
-
-  const getSummary = (): string => {
-    const content = typeof block.content === "string" ? block.content : "";
-    if (block.isError) {
-      const firstLine = content.split(/\r?\n/)[0];
-      return firstLine.length > 60
-        ? firstLine.substring(0, 57) + "..."
-        : firstLine;
-    }
-    if (shouldUseScreenshotSummary(toolName, content))
-      return t("tool.summaryScreenshot");
-    if (content.length < 60) return content.trim();
-    const lines = content.trim().split(/\r?\n/);
-    return t("tool.summaryLines", { count: lines.length });
-  };
+  const collapsedSummary = getCollapsedToolSummary(
+    toolName,
+    block.content,
+    block.isError === true,
+  );
+  const collapsedSummaryText = formatCollapsedToolSummary(collapsedSummary, t);
 
   const validImages =
     block.images?.filter(
@@ -119,6 +114,21 @@ export const ToolResultBlock = memo(function ToolResultBlock({
     hasImages,
     block.isError === true,
   );
+  const resultStep = traceSteps.find(
+    (s) => s.id === block.toolUseId && s.type === "tool_result",
+  );
+  const duration = resultStep?.duration;
+  const durationText =
+    duration === undefined
+      ? null
+      : duration < 1000
+        ? `${duration}ms`
+        : `${(duration / 1000).toFixed(1)}s`;
+  const expandedMetaItems = [
+    durationText,
+    hasImages ? t("tool.metaImages", { count: validImages.length }) : null,
+    mcpServerName,
+  ].filter((value): value is string => Boolean(value));
 
   return (
     <div
@@ -128,35 +138,54 @@ export const ToolResultBlock = memo(function ToolResultBlock({
     >
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2.5 py-2 pr-3 text-left hover:bg-surface-hover/50 transition-colors"
+        aria-expanded={expanded}
+        className="group w-full flex items-start gap-2.5 py-2 pr-3 text-left hover:bg-surface-hover/50 transition-colors"
       >
         {block.isError ? (
-          <XCircle className="w-3.5 h-3.5 text-error flex-shrink-0" />
+          <XCircle className="w-3.5 h-3.5 pt-0.5 text-error flex-shrink-0" />
         ) : (
-          <CheckCircle2 className="w-3.5 h-3.5 text-success flex-shrink-0" />
+          <CheckCircle2 className="w-3.5 h-3.5 pt-0.5 text-success flex-shrink-0" />
         )}
-        <span
-          className={`text-xs font-mono flex-shrink-0 ${block.isError ? "text-error" : "text-text-muted"}`}
-        >
-          {displayName}
-        </span>
-        <span className="text-xs text-text-muted truncate flex-1">
-          {getSummary()}
-        </span>
-        {hasImages && (
-          <span className="text-xs text-text-muted flex-shrink-0">
-            {t("tool.badgeImages", { count: block.images?.length ?? 0 })}
+        <div className="min-w-0 flex flex-1 flex-wrap items-baseline gap-x-1 gap-y-0.5">
+          <span
+            className={`min-w-0 max-w-full truncate text-xs font-mono ${
+              block.isError ? "text-error" : "text-text-secondary"
+            }`}
+          >
+            {displayName}
           </span>
-        )}
-        {expanded ? (
-          <ChevronDown className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
-        ) : (
-          <ChevronRight className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
-        )}
+          {collapsedSummaryText && (
+            <span
+              className={`whitespace-nowrap text-xs ${
+                block.isError ? "text-error" : "text-text-muted"
+              }`}
+            >
+              · {collapsedSummaryText}
+            </span>
+          )}
+          <span
+            className={`inline-flex w-3.5 flex-shrink-0 items-center justify-center self-center text-text-muted transition-opacity ${
+              expanded
+                ? "opacity-100"
+                : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+            }`}
+          >
+            {expanded ? (
+              <ChevronDown className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5" />
+            )}
+          </span>
+        </div>
       </button>
 
       {expanded && (
-        <div className="px-3 py-2 animate-fade-in">
+        <div className="animate-fade-in px-3 py-2">
+          {expandedMetaItems.length > 0 && (
+            <div className="pb-2 text-xs text-text-muted">
+              {expandedMetaItems.join(" · ")}
+            </div>
+          )}
           {preferImageOutput && hasImages && (
             <div className="space-y-2">
               {validImages.map((image, index) => (

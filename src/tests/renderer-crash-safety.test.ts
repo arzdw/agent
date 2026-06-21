@@ -3,6 +3,10 @@
  * in MessageCard helpers to prevent white-screen crashes.
  */
 import { describe, it, expect } from "vitest";
+import {
+  formatCollapsedToolSummary,
+  getCollapsedToolSummary,
+} from "../renderer/utils/tool-result-summary";
 
 // We can't import React components directly without a DOM environment,
 // so we re-implement the pure logic functions to test them in isolation.
@@ -57,25 +61,6 @@ function getToolLabel(name: string, input: unknown): string {
       : "Fetch URL";
   }
   return name;
-}
-
-/** getSummary — mirrors the ToolUseBlock getSummary logic */
-function getSummary(
-  toolResult: { content: unknown; isError?: boolean } | null,
-  _toolName: string,
-): string {
-  if (!toolResult) return "";
-  const content =
-    typeof toolResult.content === "string" ? toolResult.content : "";
-  if (toolResult.isError) {
-    const firstLine = content.split(/\r?\n/)[0];
-    return firstLine.length > 60
-      ? firstLine.substring(0, 57) + "..."
-      : firstLine;
-  }
-  if (content.length < 60) return content.trim();
-  const lines = content.trim().split(/\r?\n/);
-  return `${lines.length} lines`;
 }
 
 // ─── shortenPath ────────────────────────────────────────────
@@ -146,46 +131,98 @@ describe("getToolLabel", () => {
   });
 });
 
-// ─── getSummary ─────────────────────────────────────────────
-describe("getSummary (defensive)", () => {
-  it("returns empty for null toolResult", () => {
-    expect(getSummary(null, "Read")).toBe("");
+// ─── getCollapsedToolSummary ─────────────────────────────────
+describe("getCollapsedToolSummary (defensive)", () => {
+  it("returns none for missing toolResult", () => {
+    expect(getCollapsedToolSummary("Read", null, false)).toEqual({
+      kind: "none",
+    });
   });
 
-  it("handles string content normally", () => {
-    expect(getSummary({ content: "hello" }, "Read")).toBe("hello");
+  it("does not show screenshot when the tool result is missing", () => {
+    expect(
+      getCollapsedToolSummary(
+        "internal_browser_screenshot",
+        undefined,
+        false,
+        false,
+      ),
+    ).toEqual({ kind: "none" });
+  });
+
+  it("counts one-line string content instead of echoing it", () => {
+    expect(getCollapsedToolSummary("Read", "hello", false)).toEqual({
+      kind: "lines",
+      count: 1,
+    });
   });
 
   it("handles error content", () => {
-    const result = getSummary(
-      { content: "Error: file not found", isError: true },
-      "Read",
-    );
-    expect(result).toBe("Error: file not found");
+    expect(
+      getCollapsedToolSummary("Read", "Error: file not found", true),
+    ).toEqual({
+      kind: "error",
+      text: "Error: file not found",
+    });
   });
 
   it("truncates long error first line", () => {
     const longLine = "E".repeat(100);
-    const result = getSummary({ content: longLine, isError: true }, "Read");
-    expect(result.length).toBe(60);
-    expect(result.endsWith("...")).toBe(true);
+    const result = getCollapsedToolSummary("Read", longLine, true);
+    expect(result).toEqual({
+      kind: "error",
+      text: `${"E".repeat(57)}...`,
+    });
   });
 
   it("does not crash when content is null", () => {
-    expect(getSummary({ content: null }, "Read")).toBe("");
+    expect(getCollapsedToolSummary("Read", null, false)).toEqual({
+      kind: "none",
+    });
   });
 
   it("does not crash when content is undefined", () => {
-    expect(getSummary({ content: undefined }, "Read")).toBe("");
+    expect(getCollapsedToolSummary("Read", undefined, false)).toEqual({
+      kind: "none",
+    });
   });
 
   it("does not crash when content is a number", () => {
-    expect(getSummary({ content: 42 }, "Read")).toBe("");
+    expect(getCollapsedToolSummary("Read", 42, false)).toEqual({
+      kind: "none",
+    });
   });
 
   it("returns line count for multi-line content", () => {
     const content = "line1\nline2\nline3\nline4\nline5\n" + "x".repeat(60);
-    const result = getSummary({ content }, "Read");
-    expect(result).toMatch(/\d+ lines/);
+    expect(getCollapsedToolSummary("Read", content, false)).toEqual({
+      kind: "lines",
+      count: 6,
+    });
+  });
+});
+
+describe("formatCollapsedToolSummary (defensive)", () => {
+  const t = (key: string, options?: { count?: number }) => {
+    if (key === "tool.summaryLines") {
+      return `${options?.count} lines`;
+    }
+    if (key === "tool.summaryScreenshot") {
+      return "Screenshot";
+    }
+    return key;
+  };
+
+  it("returns empty for kind none", () => {
+    expect(formatCollapsedToolSummary({ kind: "none" }, t as never)).toBe("");
+  });
+
+  it("returns error text unchanged", () => {
+    expect(
+      formatCollapsedToolSummary(
+        { kind: "error", text: "permission denied" },
+        t as never,
+      ),
+    ).toBe("permission denied");
   });
 });

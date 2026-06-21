@@ -51,8 +51,8 @@ const RELEASES_API = `https://api.github.com/repos/${GITHUB_REPO}/releases?per_p
 // Other minors fall back to the GitHub releases API or explicit env overrides.
 const DEFAULT_PYTHON_URLS = PYTHON_MINOR === '3.10'
   ? {
-      'aarch64-apple-darwin': 'https://github.com/astral-sh/python-build-standalone/releases/download/20260203/cpython-3.10.19+20260203-aarch64-apple-darwin-install_only.tar.gz',
-      'x86_64-apple-darwin': 'https://github.com/astral-sh/python-build-standalone/releases/download/20260203/cpython-3.10.19+20260203-x86_64-apple-darwin-install_only.tar.gz',
+      'aarch64-apple-darwin': 'https://github.com/astral-sh/python-build-standalone/releases/download/20260610/cpython-3.10.20%2B20260610-aarch64-apple-darwin-install_only.tar.gz',
+      'x86_64-apple-darwin': 'https://github.com/astral-sh/python-build-standalone/releases/download/20260610/cpython-3.10.20%2B20260610-x86_64-apple-darwin-install_only.tar.gz',
       'x86_64-unknown-linux-gnu': 'https://github.com/astral-sh/python-build-standalone/releases/download/20260610/cpython-3.10.20%2B20260610-x86_64-unknown-linux-gnu-install_only.tar.gz',
     }
   : {};

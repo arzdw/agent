@@ -725,6 +725,11 @@
     "switchModel": "Switch model",
     "slashSkills": "Skills",
     "slashCommands": "Commands",
+    "slashAll": "All",
+    "slashNoMatch": "No matching results",
+    "slashShortcutHint": "↑↓Navigate ↵Select EscClose TabSwitch",
+    "slashTabCommands": "Commands",
+    "slashTabSkills": "Skills",
     "thinkingLevel": "Thinking",
     "thinkingLevelHint": "Set model thinking level per session",
     "thinkingLevel.off": "Off",
@@ -752,7 +757,15 @@
     "active": "Active",
     "paused": "Paused",
     "complete": "Complete",
+    "blocked": "Blocked",
+    "budgetLimited": "Budget exhausted",
     "turn": "turn {{n}}"
+  },
+  "slash": {
+    "compact": "Compact",
+    "compactDesc": "Manually compact current session context",
+    "goal": "Goal",
+    "goalDesc": "Set a goal for the agent to autonomously work toward"
   },
   "context": {
     "progress": "Progress",
@@ -1070,9 +1083,10 @@
   "tool": {
     "sectionInput": "Input",
     "sectionOutput": "Output",
-    "summaryScreenshot": "Screenshot captured",
+    "summaryScreenshot": "Screenshot",
     "summaryLines": "{{count}} lines",
     "badgeImages": "+{{count}} img",
+    "metaImages": "{{count}} images",
     "actionRead": "Read file",
     "actionWrite": "Write file",
     "actionEdit": "Edit file",

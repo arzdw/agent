@@ -725,6 +725,11 @@
     "switchModel": "切换模型",
     "slashSkills": "技能",
     "slashCommands": "命令",
+    "slashAll": "全部",
+    "slashNoMatch": "无匹配结果",
+    "slashShortcutHint": "↑↓选择 ↵确认 Esc关闭 Tab切换分类",
+    "slashTabCommands": "命令",
+    "slashTabSkills": "技能",
     "thinkingLevel": "思考",
     "thinkingLevelHint": "按会话设置模型思考强度",
     "thinkingLevel.off": "关闭",
@@ -752,7 +757,15 @@
     "active": "执行中",
     "paused": "已暂停",
     "complete": "已完成",
+    "blocked": "已阻塞",
+    "budgetLimited": "预算耗尽",
     "turn": "第{{n}}轮"
+  },
+  "slash": {
+    "compact": "压缩会话",
+    "compactDesc": "手动压缩当前会话上下文",
+    "goal": "目标执行",
+    "goalDesc": "设定目标，由 Agent 自主循环执行直到完成"
   },
   "context": {
     "progress": "进度",
@@ -1070,9 +1083,10 @@
   "tool": {
     "sectionInput": "输入",
     "sectionOutput": "输出",
-    "summaryScreenshot": "已截图",
+    "summaryScreenshot": "截图",
     "summaryLines": "{{count}} 行",
     "badgeImages": "+{{count}} 张图",
+    "metaImages": "{{count}} 张图片",
     "actionRead": "读取文件",
     "actionWrite": "写入文件",
     "actionEdit": "编辑文件",
