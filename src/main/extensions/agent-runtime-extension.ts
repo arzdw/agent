@@ -22,6 +22,30 @@ export interface AfterSessionRunContext {
   messages: Message[];
 }
 
+export interface AfterSessionRunResult {
+  continuePrompt?: string;
+  goalStatus?: {
+    status: "active" | "paused" | "complete" | "cleared";
+    objective?: string;
+    iteration?: number;
+    tokensUsed?: number;
+    tokenBudget?: number;
+  };
+}
+
+export interface CommandContext {
+  command: string;
+  args: string;
+  sessionId: string;
+}
+
+export interface CommandResult {
+  handled: boolean;
+  message?: string;
+  firstTurnPrompt?: string;
+  goalStatus?: AfterSessionRunResult["goalStatus"];
+}
+
 export interface SessionDeletedContext {
   sessionId: string;
   session?: Session | null;
@@ -32,6 +56,7 @@ export interface AgentRuntimeExtension {
   beforeSessionRun?(
     context: BeforeSessionRunContext,
   ): Promise<BeforeSessionRunResult | void>;
-  afterSessionRun?(context: AfterSessionRunContext): Promise<void>;
+  afterSessionRun?(context: AfterSessionRunContext): Promise<AfterSessionRunResult | void>;
+  onCommand?(context: CommandContext): Promise<CommandResult | void>;
   onSessionDeleted?(context: SessionDeletedContext): Promise<void>;
 }

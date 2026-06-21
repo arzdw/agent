@@ -607,6 +607,17 @@ export type ServerEvent =
   | { type: "update.error"; payload: { message: string } }
   | { type: "update.not-available"; payload: Record<string, never> }
   | {
+      type: "goal.status";
+      payload: {
+        sessionId: string;
+        status: "active" | "paused" | "complete" | "cleared";
+        objective?: string;
+        iteration?: number;
+        tokensUsed?: number;
+        tokenBudget?: number;
+      };
+    }
+  | {
       type: "error";
       payload: {
         message: string;

@@ -43,6 +43,13 @@ export interface SessionState {
   executionClock: SessionExecutionClock;
   traceSteps: TraceStep[];
   contextWindow: number;
+  goalStatus?: {
+    status: "active" | "paused" | "complete" | "cleared";
+    objective?: string;
+    iteration?: number;
+    tokensUsed?: number;
+    tokenBudget?: number;
+  };
 }
 
 const DEFAULT_SESSION_STATE: SessionState = {
@@ -152,6 +159,10 @@ interface AppState {
   startExecutionClock: (sessionId: string, startAt: number) => void;
   finishExecutionClock: (sessionId: string, endAt?: number) => void;
   clearExecutionClock: (sessionId: string) => void;
+  setGoalStatus: (
+    sessionId: string,
+    goalStatus: SessionState["goalStatus"],
+  ) => void;
   setMessages: (sessionId: string, messages: Message[]) => void;
   setPartialMessage: (
     sessionId: string,
@@ -473,6 +484,13 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       sessionStates: patchSession(state.sessionStates, sessionId, {
         executionClock: { startAt: null, endAt: null },
+      }),
+    })),
+
+  setGoalStatus: (sessionId, goalStatus) =>
+    set((state) => ({
+      sessionStates: patchSession(state.sessionStates, sessionId, {
+        goalStatus,
       }),
     })),
 

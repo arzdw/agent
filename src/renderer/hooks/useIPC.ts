@@ -245,6 +245,21 @@ export function useIPC() {
               delete pendingThinking[event.payload.sessionId];
             }
             store.addMessage(event.payload.sessionId, event.payload.message);
+            // Goal active: auto-expand the turn when assistant message arrives
+            if (
+              event.payload.message.role === "assistant" &&
+              event.payload.message.turnId
+            ) {
+              const gs =
+                store.sessionStates[event.payload.sessionId]?.goalStatus;
+              if (gs?.status === "active") {
+                store.setTurnCollapsed(
+                  event.payload.sessionId,
+                  event.payload.message.turnId,
+                  false,
+                );
+              }
+            }
             break;
 
           case "stream.partial":
@@ -299,6 +314,16 @@ export function useIPC() {
               sessionId: event.payload.sessionId,
               stepId: event.payload.stepId,
               updates: event.payload.updates,
+            });
+            break;
+
+          case "goal.status":
+            store.setGoalStatus(event.payload.sessionId, {
+              status: event.payload.status,
+              objective: event.payload.objective,
+              iteration: event.payload.iteration,
+              tokensUsed: event.payload.tokensUsed,
+              tokenBudget: event.payload.tokenBudget,
             });
             break;
 
@@ -623,6 +648,10 @@ export function useIPC() {
           };
           addMessage(session.id, userMessage);
           startExecutionClock(session.id, userMessage.timestamp);
+          // Clear completed goal status when user sends a new message
+          if (useAppStore.getState().sessionStates[session.id]?.goalStatus?.status === "complete") {
+            useAppStore.getState().setGoalStatus(session.id, undefined);
+          }
 
           // Immediately activate turn to show processing indicator while waiting for API
           const mockStepId = `pending-step-${Date.now()}`;
@@ -735,6 +764,10 @@ export function useIPC() {
       };
       addMessage(sessionId, userMessage);
       startExecutionClock(sessionId, userMessage.timestamp);
+      // Clear completed goal status when user sends a new message
+      if (store.sessionStates[sessionId]?.goalStatus?.status === "complete") {
+        store.setGoalStatus(sessionId, undefined);
+      }
 
       // Browser mode mock
       if (!isElectron) {

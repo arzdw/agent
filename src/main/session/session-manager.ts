@@ -935,6 +935,66 @@ export class SessionManager {
           );
         }
 
+        // ── /goal command interception ─────────────────────────────
+        const goalMatch = enhancedPrompt.match(/^\/goal\b\s*(.*)/);
+        if (goalMatch && this.extensionManager) {
+          const cmdCtx = {
+            command: "goal",
+            args: goalMatch[1] || "",
+            sessionId: session.id,
+          };
+          const cmdResult = await this.extensionManager.handleCommand(cmdCtx);
+          if (cmdResult?.handled) {
+            // Save synthetic user message for record-keeping
+            const goalUserMsg: Message = {
+              id: uuidv4(),
+              sessionId: session.id,
+              role: "user",
+              content: [{ type: "text", text: enhancedPrompt }],
+              timestamp: Date.now(),
+              turnId: resolvedTurnId,
+            };
+            this.saveMessage(goalUserMsg);
+
+            // Emit assistant response
+            const goalRespMsg: Message = {
+              id: uuidv4(),
+              sessionId: session.id,
+              role: "assistant",
+              content: [{ type: "text", text: cmdResult.message ?? "" }],
+              timestamp: Date.now(),
+              turnId: resolvedTurnId,
+            };
+            this.saveMessage(goalRespMsg);
+            this.sendToRenderer({
+              type: "stream.message",
+              payload: { sessionId: session.id, message: goalRespMsg },
+            });
+
+            // Emit goal status to renderer
+            if (cmdResult.goalStatus) {
+              this.sendToRenderer({
+                type: "goal.status",
+                payload: {
+                  sessionId: session.id,
+                  ...cmdResult.goalStatus,
+                },
+              });
+            }
+
+            // Enqueue first-turn prompt if starting a goal
+            if (cmdResult.firstTurnPrompt) {
+              this.enqueuePrompt(
+                session,
+                cmdResult.firstTurnPrompt,
+                undefined,
+                undefined,
+              );
+            }
+            return;
+          }
+        }
+
         // Save user message to database for persistence
         const existingMessages = this.getMessages(session.id);
         const userMessage: Message = {
@@ -994,18 +1054,42 @@ export class SessionManager {
 
         if (this.extensionManager) {
           const stableMessages = this.getMessages(session.id);
-          this.extensionManager
+          const afterResult = await this.extensionManager
             .afterSessionRun({
               session,
               prompt: enhancedPrompt,
               messages: stableMessages,
             })
-            .catch((error) =>
+            .catch((error) => {
               logCtxError(
                 "[SessionManager] Runtime extension post-run hook failed:",
                 error,
-              ),
-            );
+              );
+              return undefined;
+            });
+
+          if (afterResult) {
+            // Emit goal status to renderer
+            if (afterResult.goalStatus) {
+              this.sendToRenderer({
+                type: "goal.status",
+                payload: {
+                  sessionId: session.id,
+                  ...afterResult.goalStatus,
+                },
+              });
+            }
+
+            // Enqueue continuation prompt for next turn
+            if (afterResult.continuePrompt) {
+              this.enqueuePrompt(
+                session,
+                afterResult.continuePrompt,
+                undefined,
+                undefined,
+              );
+            }
+          }
         }
 
         // 标题生成不再与首轮对话并发，避免与主请求竞争同一上游配额/通道导致体感变慢。

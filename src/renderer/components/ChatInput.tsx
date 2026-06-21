@@ -414,9 +414,29 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     const selectSlashItem = useCallback(
       (item: SlashItem) => {
         if (item.category === "command") {
-          onCommand?.(item.command.action);
-          clearSlashText();
+          if (item.command.action === "compact") {
+            onCommand?.(item.command.action);
+            clearSlashText();
+            closeSlashMenu();
+            return;
+          }
+          // For other builtin commands (e.g. goal), insert text
+          const textarea = textareaRef.current;
+          if (!textarea || slashStartIndex < 0) return;
+          const currentValue = textarea.value;
+          const cursorPos = textarea.selectionStart;
+          const before = currentValue.slice(0, slashStartIndex);
+          const after = currentValue.slice(cursorPos);
+          const replacement = `/${item.command.name} `;
+          const newValue = before + replacement + after;
+          setPrompt(newValue);
+          textarea.value = newValue;
           closeSlashMenu();
+          const newCursorPos = slashStartIndex + replacement.length;
+          requestAnimationFrame(() => {
+            textarea.focus();
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+          });
           return;
         }
         // skill: insert text

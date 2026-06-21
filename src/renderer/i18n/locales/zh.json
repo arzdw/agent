@@ -748,6 +748,12 @@
     "label": "引导",
     "eventLabel": "引导"
   },
+  "goal": {
+    "active": "执行中",
+    "paused": "已暂停",
+    "complete": "已完成",
+    "turn": "第{{n}}轮"
+  },
   "context": {
     "progress": "进度",
     "artifacts": "产物",

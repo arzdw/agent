@@ -7,6 +7,15 @@ export type ChatInputStatus =
   | { type: "compaction-success" }
   | { type: "compaction-failed" }
   | { type: "steering"; text: string }
+  | {
+      type: "goal-active";
+      objective: string;
+      iteration: number;
+      tokensUsed?: number;
+      tokenBudget?: number;
+    }
+  | { type: "goal-paused"; objective: string }
+  | { type: "goal-complete"; objective: string }
   | null;
 
 interface ChatInputStatusBarProps {
@@ -46,6 +55,19 @@ export function ChatInputStatusBar({ status }: ChatInputStatusBarProps) {
       text = `${t("steer.eventLabel")}: ${status.text}`;
       toneClass = "text-text-secondary";
       break;
+    case "goal-active":
+      icon = <Target className="w-3 h-3 animate-pulse" />;
+      text = `${t("goal.active")}: ${status.objective} (${t("goal.turn", { n: status.iteration })})`;
+      break;
+    case "goal-paused":
+      icon = <Target className="w-3 h-3" />;
+      text = `${t("goal.paused")}: ${status.objective}`;
+      break;
+    case "goal-complete":
+      icon = <Check className="w-3 h-3" />;
+      text = `${t("goal.complete")}: ${status.objective}`;
+      toneClass = "text-success";
+      break;
   }
 
   return (
@@ -65,6 +87,13 @@ export function resolveInputStatus(params: {
   compactionResult: "success" | "failed" | null;
   steeringText: string;
   shouldShowThinkingIndicator: boolean;
+  goalStatus?: {
+    status: "active" | "paused" | "complete" | "cleared";
+    objective?: string;
+    iteration?: number;
+    tokensUsed?: number;
+    tokenBudget?: number;
+  } | null;
 }): ChatInputStatus {
   if (params.isCompacting) return { type: "compacting" };
   if (params.compactionResult === "failed") {
@@ -75,6 +104,28 @@ export function resolveInputStatus(params: {
   }
   if (params.compactionResult === "success") {
     return { type: "compaction-success" };
+  }
+  if (params.goalStatus) {
+    switch (params.goalStatus.status) {
+      case "active":
+        return {
+          type: "goal-active",
+          objective: params.goalStatus.objective ?? "",
+          iteration: params.goalStatus.iteration ?? 0,
+          tokensUsed: params.goalStatus.tokensUsed,
+          tokenBudget: params.goalStatus.tokenBudget,
+        };
+      case "paused":
+        return {
+          type: "goal-paused",
+          objective: params.goalStatus.objective ?? "",
+        };
+      case "complete":
+        return {
+          type: "goal-complete",
+          objective: params.goalStatus.objective ?? "",
+        };
+    }
   }
   if (params.shouldShowThinkingIndicator) {
     return { type: "thinking" };

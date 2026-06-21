@@ -32,6 +32,7 @@ import { SessionManager } from "./session/session-manager";
 import { SkillsManager } from "./skills/skills-manager";
 import { MemoryService } from "./memory/memory-service";
 import { MemoryExtension } from "./memory/memory-extension";
+import { GoalExtension } from "./extensions/goal-extension";
 import {
   BrowserViewManager,
   BROWSER_CDP_PORT,
@@ -988,6 +989,7 @@ app
     memoryService = new MemoryService(db);
     const extensionManager = new AgentRuntimeExtensionManager([
       new MemoryExtension(memoryService),
+      new GoalExtension(),
     ]);
 
     // Initialize session manager before creating an interactive window.

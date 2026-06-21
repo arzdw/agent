@@ -189,6 +189,7 @@ export function ChatView() {
     window.addEventListener("focus", checkGitChanges);
     return () => window.removeEventListener("focus", checkGitChanges);
   }, [checkGitChanges]);
+
   const [activeConnectors, setActiveConnectors] = useState<
     { id: string; name: string; connected: boolean; toolCount: number }[]
   >([]);
@@ -212,6 +213,12 @@ export function ChatView() {
   const chatInputRef = useRef<ChatInputHandle>(null);
 
   const hasActiveTurn = Boolean(activeTurn);
+  const goalStatus = useAppStore((s) =>
+    activeSessionId
+      ? s.sessionStates[activeSessionId]?.goalStatus
+      : undefined,
+  );
+
   const pendingCount = pendingTurns.length;
   const isSessionRunning = activeSession?.status === "running";
   const canStop = isSessionRunning || hasActiveTurn || pendingCount > 0;
@@ -230,6 +237,7 @@ export function ChatView() {
       compactionResult,
       steeringText,
       shouldShowThinkingIndicator,
+      goalStatus,
     });
   }, [
     isCompacting,
@@ -239,6 +247,7 @@ export function ChatView() {
     partialThinking,
     steeringEvent,
     activeTurn?.turnId,
+    goalStatus,
   ]);
 
   const lastInputTokens = useMemo(() => {

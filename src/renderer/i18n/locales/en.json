@@ -748,6 +748,12 @@
     "label": "Steer",
     "eventLabel": "Steer"
   },
+  "goal": {
+    "active": "Active",
+    "paused": "Paused",
+    "complete": "Complete",
+    "turn": "turn {{n}}"
+  },
   "context": {
     "progress": "Progress",
     "artifacts": "Artifacts",
