@@ -1,60 +1,63 @@
 ---
 name: image-ocr
-description: "Extract text from images using OCR. Use when user provides an image and wants to extract text: screenshots, scanned documents, invoices, receipts, business cards, ID cards."
-version: 1.0.0
-author: deskwand
-license: MIT
+version: 2.0.0
+description: "本地离线 OCR 文字识别，基于 tesseract.js。当用户发图片/截图/扫描件要求提取文字时使用，支持中英文。纯本地运行，无需联网。"
+allowed-tools: "read,shell"
+requires:
+  npm: ["tesseract.js"]
 metadata:
-  tags: [OCR, Images, Text-Extraction, Documents, Invoices, Screenshots]
-allowed-tools: "ocr_image,read,tool_gateway"
+  tags: [OCR, Images, Text-Extraction, Screenshots, Documents]
 ---
 
-# Image OCR
+# Image OCR (v2)
 
-Extract text from images. Covers 40+ document types.
+基于 tesseract.js（WASM）的本地离线 OCR，零系统依赖。
 
-## When to use
+语言包（~30MB）**首次使用自动从 S3 下载**，缓存到本地后离线可用。
 
-- User provides an image and asks "what does this say?"
-- Screenshots with text to extract
-- Scanned documents, invoices, receipts
-- Business cards, ID cards, bank cards, license plates
-- PDF pages rendered as images
+## 触发条件
 
-## Usage
+当用户提供图片并要求识别其中文字时触发：
+- 「识别这张图」「OCR 一下」「图片里写了什么」「提取文字」「帮我看看这张截图」
+- 截图 / 照片 / 扫描件 / PDF 页面，任意图片格式
+- 中英文混合内容
 
+## 使用方式
+
+### 识别单张图片
+
+```bash
+node <skill-path>/scripts/ocr.js <image-path>
 ```
-ocr_image(image_source="/path/to/image.png", type="general")
+
+首次运行会自动下载中英文语言包，约 30MB，只需一次。
+
+### 指定语言
+
+```bash
+# 仅英文
+node <skill-path>/scripts/ocr.js <image-path> --lang=eng
+
+# 仅中文
+node <skill-path>/scripts/ocr.js <image-path> --lang=chi_sim
+
+# 中英混合（默认）
+node <skill-path>/scripts/ocr.js <image-path> --lang=chi_sim+eng
 ```
 
-### Supported Types
+### 输出 JSON（含置信度）
 
-| Type | Use for |
-|------|---------|
-| `general` | Any image with text (default) |
-| `idcard` | ID cards, driver's licenses |
-| `bankcard` | Bank cards |
-| `business_license` | Business licenses |
-| `invoice` | Invoices, receipts |
-| `passport` | Passports |
-| `vehicle_license` | Vehicle license plates |
+```bash
+node <skill-path>/scripts/ocr.js <image-path> --json
+```
 
-## Workflow
+## 识别 PDF
 
-1. **Identify the document type** — helps pick the right OCR type
-2. **Run OCR**: `ocr_image(image_source=..., type=...)`
-3. **Review output**: Check for recognition errors (especially numbers, special characters)
-4. **Structure the data**: If invoice/receipt, present line items + totals. If business card, present name/title/contact.
+1. 用 `shell` 工具将 PDF 每页转为 PNG
+2. 逐页运行 `node .../scripts/ocr.js <page-N.png>`
 
-## For PDFs with Images
+## 注意事项
 
-If a PDF contains scanned pages (image-based), extract pages as images first, then OCR each:
-1. Use `read_document` first — it has built-in OCR fallback
-2. If that fails, use `shell` to convert PDF pages to images, then `ocr_image` each
-
-## Constraints
-
-- OCR accuracy varies by image quality — flag uncertain characters
-- For multi-page documents, process page by page
-- Never infer or fabricate text that isn't clearly visible in the image
-- For handwritten text: note that recognition may be unreliable
+- 图片质量直接影响准确率，模糊图片需提前提醒用户
+- 手写体效果较差，务必告知用户
+- 不要脑补/编造图片中不存在的文字
