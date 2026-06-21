@@ -80,11 +80,9 @@ mac:
       arch:
         - arm64
   artifactName: ${productName}-${version}-mac-${arch}.${ext}
-  identity: auto
-  hardenedRuntime: true
-  gatekeeperAssess: true
-  entitlements: resources/entitlements.mac.plist
-  entitlementsInherit: resources/entitlements.mac.plist
+  identity: "DeskWand Self-Signed"
+  hardenedRuntime: false
+  gatekeeperAssess: false
   extendInfo:
     LSApplicationCategoryType: public.app-category.developer-tools
     NSScreenCaptureUsageDescription: 'DeskWand needs screen recording access for GUI automation.'

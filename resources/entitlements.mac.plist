@@ -1,3 +1,14 @@
+<!--
+  macOS Entitlements for DeskWand.
+
+  USAGE: only effective when electron-builder.yml mac section has:
+    hardenedRuntime: true
+    entitlements: resources/entitlements.mac.plist
+    entitlementsInherit: resources/entitlements.mac.plist
+
+  Requires a valid Apple Developer ID certificate.
+  Not needed with self-signed cert (hardenedRuntime: false).
+  -->
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
