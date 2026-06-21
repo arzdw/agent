@@ -716,6 +716,7 @@
   "chat": {
     "sendMessage": "Send message",
     "processing": "Thinking",
+    "toolExecuting": "Running",
     "stop": "Stop",
     "typeMessage": "Type a message, press / for shortcuts...",
     "loadingConversation": "Loading chat...",
@@ -1099,6 +1100,10 @@
     "actionBrowserEvaluate": "JS evaluate",
     "actionBrowserWait": "Wait for",
     "actionBrowserGetState": "Get page state",
+    "actionBrowserScroll": "Scroll",
+    "actionBrowserHover": "Hover",
+    "actionBrowserSelect": "Select",
+    "actionBrowserPress": "Press key",
     "labelBrowserNavigate": "Navigate to {{url}}",
     "labelBrowserClick": "Click \"{{selector}}\"",
     "labelBrowserFill": "Fill \"{{text}}\"",

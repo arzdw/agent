@@ -7,6 +7,7 @@ import {
   useActivePartialContent,
   useActiveTurn,
   usePendingTurns,
+  useActiveTraceSteps,
   useAppConfig,
 } from "../store/selectors";
 import { useAppStore } from "../store";
@@ -96,6 +97,7 @@ export function ChatView() {
   const activeSessionId = useActiveSessionId();
   const activeSession = useCurrentSession();
   const messages = useActiveSessionMessages();
+  const traceSteps = useActiveTraceSteps();
   const { partialMessage, partialThinking } = useActivePartialContent();
   const activeTurn = useActiveTurn();
   const pendingTurns = usePendingTurns();
@@ -238,9 +240,26 @@ export function ChatView() {
       messages.some(
         (m) => m.role === "assistant" && m.turnId === activeTurn.turnId,
       );
+    // Detect a currently-running tool from trace steps (tool_call with status "running")
+    const runningToolName: string | null = (() => {
+      if (!hasActiveTurn) return null;
+      for (let i = traceSteps.length - 1; i >= 0; i--) {
+        const step = traceSteps[i];
+        if (
+          step.type === "tool_call" &&
+          step.status === "running" &&
+          step.toolName
+        ) {
+          return step.toolName;
+        }
+      }
+      return null;
+    })();
+
     const shouldShowThinkingIndicator =
       hasActiveTurn &&
       !hasAssistantOutput &&
+      !runningToolName &&
       (!partialMessage || partialMessage.trim() === "") &&
       !partialThinking;
     return resolveInputStatus({
@@ -248,6 +267,7 @@ export function ChatView() {
       compactionResult,
       steeringText,
       shouldShowThinkingIndicator,
+      runningToolName,
       goalStatus,
     });
   }, [
@@ -260,6 +280,7 @@ export function ChatView() {
     activeTurn?.turnId,
     goalStatus,
     messages,
+    traceSteps,
   ]);
 
   const lastInputTokens = useMemo(() => {
