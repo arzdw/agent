@@ -93,6 +93,7 @@ import {
 } from "../shared/local-file-path";
 import { eventRequiresSessionManager } from "./client-event-utils";
 import { getUnsupportedWorkspacePathReason } from "./workspace-path-constraints";
+import { getDefaultWorkingDirPath } from "../shared/workspace-path";
 import {
   log,
   logWarn,
@@ -636,7 +637,7 @@ function createWindow() {
 function initializeDefaultWorkingDir(): string {
   // Create default working directory in user data path (this is the permanent global default)
   const userDataPath = app.getPath("userData");
-  const defaultDir = join(userDataPath, "default_working_dir");
+  const defaultDir = getDefaultWorkingDirPath(userDataPath);
 
   if (!fs.existsSync(defaultDir)) {
     fs.mkdirSync(defaultDir, { recursive: true });

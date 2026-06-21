@@ -2238,10 +2238,13 @@ ${hints.join("\n")}
 
       // pi-coding-agent handles path sandboxing via its own tools
       const imageCapable = true; // pi-ai models generally support images; let the model handle unsupported cases
+      // session.cwd is always set (createSession), so workingDir is always
+      // a valid path; fall back to userData as a safe default instead of
+      // process.cwd() which can be '/' in packaged macOS builds.
       const effectiveCwd =
         useSandboxIsolation && sandboxPath
           ? sandboxPath
-          : workingDir || process.cwd();
+          : workingDir || app.getPath("userData");
 
       // Use app-specific DeskWand config directory to avoid conflicts with user settings
       // SDK uses DeskWand_CONFIG_DIR to locate skills

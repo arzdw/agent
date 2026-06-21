@@ -1023,7 +1023,10 @@ export class ToolExecutor {
     command: string,
     context: ExecutionContext,
   ): Promise<ToolResult> {
-    const cwd = context.cwd || process.cwd();
+    // session.cwd is always a valid path (createSession ensures it),
+    // but keep a safe fallback — os.homedir() is always writable,
+    // unlike process.cwd() which can be '/' in packaged macOS builds.
+    const cwd = context.cwd || os.homedir();
 
     // Use the same sandbox validation as executeCommand
     try {

@@ -36,7 +36,7 @@ import { SandboxSync } from "../sandbox/sandbox-sync";
 import { AgentRunner } from "../agent/agent-runner";
 import { resolveModelContextWindow } from "../agent/pi-model-resolution";
 import { configStore } from "../config/config-store";
-import { DEFAULT_WORKDIR_DIRNAME } from "../../shared/workspace-path";
+import { DEFAULT_WORKDIR_DIRNAME, getDefaultWorkingDirPath } from "../../shared/workspace-path";
 import type { ProviderProfileKey } from "../config/config-store";
 import { MCPManager } from "../mcp/mcp-manager";
 import { mcpConfigStore } from "../mcp/mcp-config-store";
@@ -367,10 +367,15 @@ export class SessionManager {
     model?: string,
   ): Session {
     const now = Date.now();
-    // Prefer frontend-provided cwd; fallback to app config, then external env vars.
+    // Prefer frontend-provided cwd; fallback to app config, then external env vars,
+    // then the app's built-in default working directory (userData/default_working_dir).
     const configuredCwd = configStore.get("defaultWorkdir");
     const envCwd = process.env.WORKDIR || process.env.DEFAULT_CWD;
-    const effectiveCwd = cwd || configuredCwd || envCwd;
+    const builtinDefaultCwd = getDefaultWorkingDirPath(
+      app.getPath("userData"),
+    );
+    const effectiveCwd =
+      cwd || configuredCwd || envCwd || builtinDefaultCwd;
     const isProjectMode = !!cwd && path.basename(cwd) !== DEFAULT_WORKDIR_DIRNAME;
     const resolvedMemoryEnabled =
       typeof memoryEnabled === "boolean"
@@ -734,7 +739,12 @@ export class SessionManager {
 
         try {
           // Create .tmp directory if it doesn't exist
-          const tmpDir = path.join(session.cwd || process.cwd(), ".tmp");
+          // Use session.cwd when available; fall back to userData (always writable)
+          // instead of process.cwd() which can be '/' in packaged macOS builds.
+          const tmpDir = path.join(
+            session.cwd || app.getPath("userData"),
+            ".tmp",
+          );
           if (!fs.existsSync(tmpDir)) {
             fs.mkdirSync(tmpDir, { recursive: true });
             log("[SessionManager] Created .tmp directory:", tmpDir);

@@ -4,6 +4,12 @@ import { isUncPath, isWindowsDrivePath } from "./local-file-path";
  *  Sessions whose cwd resolves to this directory should not be treated as project-mode. */
 export const DEFAULT_WORKDIR_DIRNAME = "default_working_dir";
 
+/** Build the path to the app's built-in default working directory given the userData path.
+ *  Browser-safe — no Node.js `path` dependency. */
+export function getDefaultWorkingDirPath(userDataPath: string): string {
+  return joinRelativePath(userDataPath, DEFAULT_WORKDIR_DIRNAME);
+}
+
 export function resolvePathAgainstWorkspace(
   pathValue: string,
   workspacePath?: string | null,
