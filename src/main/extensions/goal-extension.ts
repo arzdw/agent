@@ -1,3 +1,4 @@
+import { app } from "electron";
 import type { TSchema } from "@sinclair/typebox";
 import { Type } from "@sinclair/typebox";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
@@ -109,6 +110,68 @@ const UpdateGoalSchema = Type.Object({
 });
 
 type UpdateGoalInput = { status: "complete" | "blocked"; summary: string };
+
+// ─── Locale messages ────────────────────────────────────────────────
+
+const MSG: Record<string, Record<string, string>> = {
+  zh: {
+    noActiveGoal: "没有活跃的目标。",
+    noGoalToPause: "没有可暂停的目标。",
+    noGoalToResume: "没有可恢复的目标。",
+    noGoalToClear: "没有可清除的目标。",
+    alreadyActive: "目标已在执行中。",
+    started: "目标已启动: {{objective}}{{budget}}",
+    paused: "目标已暂停: {{objective}}",
+    resumed: "目标已恢复: {{objective}}",
+    cleared: "目标已清除。",
+    needObjective: "请提供一个目标描述。",
+    goalIsStatus: "目标状态为 {{status}}，请用 /goal <目标> 创建新目标。",
+    statusActive: "🎯 执行中 (第{{n}}轮): {{objective}}{{budget}}",
+    statusPaused: "⏸ 已暂停: {{objective}}",
+    statusComplete: "✅ 已完成: {{objective}}",
+    statusBlocked: "🚫 已阻塞: {{objective}}",
+    statusBudgetLimited: "💸 预算耗尽: {{objective}}{{budget}}",
+  },
+  en: {
+    noActiveGoal: "No active goal.",
+    noGoalToPause: "No active goal to pause.",
+    noGoalToResume: "No goal to resume.",
+    noGoalToClear: "No goal to clear.",
+    alreadyActive: "Goal is already active.",
+    started: "Goal started: {{objective}}{{budget}}",
+    paused: "Goal paused: {{objective}}",
+    resumed: "Goal resumed: {{objective}}",
+    cleared: "Goal cleared.",
+    needObjective: "Please provide a goal objective.",
+    goalIsStatus: "Goal is {{status}}; start a new one with /goal <objective>.",
+    statusActive: "🎯 Goal active (turn {{n}}): {{objective}}{{budget}}",
+    statusPaused: "⏸ Goal paused: {{objective}}",
+    statusComplete: "✅ Goal complete: {{objective}}",
+    statusBlocked: "🚫 Goal blocked: {{objective}}",
+    statusBudgetLimited: "💸 Goal budget exhausted: {{objective}}{{budget}}",
+  },
+};
+
+function getLocale(): string {
+  try {
+    const l = app.getLocale();
+    return l.startsWith("zh") ? "zh" : "en";
+  } catch {
+    return "en";
+  }
+}
+
+function msg(
+  key: string,
+  params?: Record<string, string | number>,
+): string {
+  const locale = getLocale();
+  const tpl = MSG[locale]?.[key] || MSG.en[key] || key;
+  if (!params) return tpl;
+  return tpl.replace(/\{\{(\w+)\}\}/g, (_, k) =>
+    params[k] !== undefined ? String(params[k]) : `{{${k}}}`,
+  );
+}
 
 // ─── Extension ───────────────────────────────────────────────────────
 
@@ -268,7 +331,7 @@ export class GoalExtension implements AgentRuntimeExtension {
   private showStatus(sessionId: string): CommandResult {
     const goal = this.getGoal(sessionId);
     if (!goal || goal.status === "cleared") {
-      return { handled: true, message: "No active goal." };
+      return { handled: true, message: msg("noActiveGoal") };
     }
 
     const parts: string[] = [];
@@ -281,12 +344,12 @@ export class GoalExtension implements AgentRuntimeExtension {
     const budgetStr = parts.length ? ` | ${parts.join(", ")}` : "";
 
     const statusMap: Record<GoalStatus, string> = {
-      active: `🎯 Goal active (turn ${goal.iteration}): ${goal.objective}${budgetStr}`,
-      paused: `⏸ Goal paused: ${goal.objective}`,
-      complete: `✅ Goal complete: ${goal.objective}`,
-      cleared: "No active goal.",
-      blocked: `🚫 Goal blocked: ${goal.objective}`,
-      budget_limited: `💸 Goal budget exhausted: ${goal.objective}${budgetStr}`,
+      active: msg("statusActive", { n: goal.iteration, objective: goal.objective, budget: budgetStr }),
+      paused: msg("statusPaused", { objective: goal.objective }),
+      complete: msg("statusComplete", { objective: goal.objective }),
+      cleared: msg("noActiveGoal"),
+      blocked: msg("statusBlocked", { objective: goal.objective }),
+      budget_limited: msg("statusBudgetLimited", { objective: goal.objective, budget: budgetStr }),
     };
 
     return {
@@ -304,7 +367,7 @@ export class GoalExtension implements AgentRuntimeExtension {
   ): CommandResult {
     const normalized = objective.trim();
     if (!normalized) {
-      return { handled: true, message: "Please provide a goal objective." };
+      return { handled: true, message: msg("needObjective") };
     }
 
     const existing = this.getGoal(sessionId);
@@ -333,7 +396,7 @@ export class GoalExtension implements AgentRuntimeExtension {
 
     return {
       handled: true,
-      message: `Goal started: ${normalized}${budgetNote}`,
+      message: msg("started", { objective: normalized, budget: budgetNote }),
       firstTurnPrompt,
       goalStatus: this.goalStatusPayload(goal).goalStatus,
     };
@@ -342,12 +405,12 @@ export class GoalExtension implements AgentRuntimeExtension {
   private pauseGoal(sessionId: string): CommandResult {
     const goal = this.getGoal(sessionId);
     if (!goal || goal.status !== "active") {
-      return { handled: true, message: "No active goal to pause." };
+      return { handled: true, message: msg("noGoalToPause") };
     }
     goal.status = "paused";
     return {
       handled: true,
-      message: `Goal paused: ${goal.objective}`,
+      message: msg("paused", { objective: goal.objective }),
       goalStatus: this.goalStatusPayload(goal).goalStatus,
     };
   }
@@ -355,23 +418,23 @@ export class GoalExtension implements AgentRuntimeExtension {
   private resumeGoal(sessionId: string): CommandResult {
     const goal = this.getGoal(sessionId);
     if (!goal) {
-      return { handled: true, message: "No goal to resume." };
+      return { handled: true, message: msg("noGoalToResume") };
     }
     if (goal.status === "complete" || goal.status === "cleared") {
       return {
         handled: true,
-        message: `Goal is ${goal.status}; start a new one with /goal <objective>.`,
+        message: msg("goalIsStatus", { status: goal.status }),
       };
     }
     if (goal.status === "active") {
-      return { handled: true, message: "Goal is already active." };
+      return { handled: true, message: msg("alreadyActive") };
     }
 
     goal.status = "active";
     const firstTurnPrompt = buildResumePrompt(goal);
     return {
       handled: true,
-      message: `Goal resumed: ${goal.objective}`,
+      message: msg("resumed", { objective: goal.objective }),
       firstTurnPrompt,
       goalStatus: this.goalStatusPayload(goal).goalStatus,
     };
@@ -380,12 +443,12 @@ export class GoalExtension implements AgentRuntimeExtension {
   private clearGoal(sessionId: string): CommandResult {
     const goal = this.getGoal(sessionId);
     if (!goal) {
-      return { handled: true, message: "No goal to clear." };
+      return { handled: true, message: msg("noGoalToClear") };
     }
     this.deleteGoal(sessionId);
     return {
       handled: true,
-      message: `Goal cleared.`,
+      message: msg("cleared"),
       goalStatus: { status: "cleared" },
     };
   }

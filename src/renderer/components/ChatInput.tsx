@@ -13,7 +13,7 @@ import { useIPC } from "../hooks/useIPC";
 import { X, Sparkles, Zap } from "lucide-react";
 import type { Skill } from "../types";
 import {
-  BUILTIN_COMMANDS,
+  getBuiltinCommands,
   type SlashCommand,
 } from "../slash-commands";
 
@@ -350,13 +350,14 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       | { category: "skill"; skill: { name: string; description?: string } };
 
     const filterText = slashFilter.toLowerCase();
+    const builtinCommands = useMemo(() => getBuiltinCommands(t), [t]);
     const filteredCommands = slashFilter
-      ? BUILTIN_COMMANDS.filter(
+      ? builtinCommands.filter(
           (c) =>
             c.name.toLowerCase().includes(filterText) ||
             c.description.toLowerCase().includes(filterText),
         )
-      : BUILTIN_COMMANDS;
+      : builtinCommands;
     // Build skill list from slashSkills (single source, already filtered by enabled).
     const mergedSkills: { name: string; description?: string }[] = [];
     for (const s of slashSkills) {

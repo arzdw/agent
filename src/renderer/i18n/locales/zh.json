@@ -716,7 +716,6 @@
   "chat": {
     "sendMessage": "发送消息",
     "processing": "思考中",
-    "toolExecuting": "执行工具",
     "stop": "停止",
     "typeMessage": "输入消息，按 / 使用快捷命令...",
     "loadingConversation": "加载聊天中...",
@@ -756,6 +755,12 @@
     "blocked": "已阻塞",
     "budgetLimited": "预算耗尽",
     "turn": "第{{n}}轮"
+  },
+  "slash": {
+    "compact": "压缩会话",
+    "compactDesc": "手动压缩当前会话上下文",
+    "goal": "目标执行",
+    "goalDesc": "设定目标，由 Agent 自主循环执行直到完成"
   },
   "context": {
     "progress": "进度",
@@ -1100,10 +1105,6 @@
     "actionBrowserEvaluate": "执行 JS",
     "actionBrowserWait": "等待",
     "actionBrowserGetState": "获取页面状态",
-    "actionBrowserScroll": "滚动",
-    "actionBrowserHover": "悬停",
-    "actionBrowserSelect": "选择",
-    "actionBrowserPress": "按键",
     "labelBrowserNavigate": "导航到 {{url}}",
     "labelBrowserClick": "点击 \"{{selector}}\"",
     "labelBrowserFill": "填充 \"{{text}}\"",
