@@ -1083,9 +1083,10 @@
   "tool": {
     "sectionInput": "Input",
     "sectionOutput": "Output",
-    "summaryScreenshot": "Screenshot captured",
+    "summaryScreenshot": "Screenshot",
     "summaryLines": "{{count}} lines",
     "badgeImages": "+{{count}} img",
+    "metaImages": "{{count}} images",
     "actionRead": "Read file",
     "actionWrite": "Write file",
     "actionEdit": "Edit file",

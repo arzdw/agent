@@ -1083,9 +1083,10 @@
   "tool": {
     "sectionInput": "输入",
     "sectionOutput": "输出",
-    "summaryScreenshot": "已截图",
+    "summaryScreenshot": "截图",
     "summaryLines": "{{count}} 行",
     "badgeImages": "+{{count}} 张图",
+    "metaImages": "{{count}} 张图片",
     "actionRead": "读取文件",
     "actionWrite": "写入文件",
     "actionEdit": "编辑文件",
