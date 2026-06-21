@@ -60,22 +60,33 @@ export const ThinkingBlock = memo(function ThinkingBlock({
     <div className="rounded-2xl bg-background/40 overflow-hidden">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2.5 py-2 pr-3 text-left hover:bg-surface-hover/50 transition-colors"
+        aria-expanded={expanded}
+        className="group w-full flex items-start gap-2.5 py-2 pr-3 text-left hover:bg-surface-hover/50 transition-colors"
       >
-        <Brain className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
-        <span className="text-xs font-medium text-text-muted flex-shrink-0">
-          {t("messageCard.thinking")}
-        </span>
-        {!expanded && (
-          <span className="text-xs text-text-muted/60 truncate flex-1 min-w-0 italic">
-            {previewNodes}
+        <Brain className="w-3.5 h-3.5 flex-shrink-0 pt-0.5 text-text-muted" />
+        <div className="min-w-0 flex flex-1 flex-wrap items-baseline gap-x-1 gap-y-0.5">
+          <span className="flex-shrink-0 text-xs font-medium text-text-muted">
+            {t("messageCard.thinking")}
           </span>
-        )}
-        {expanded ? (
-          <ChevronDown className="w-3.5 h-3.5 text-text-muted flex-shrink-0 ml-auto" />
-        ) : (
-          <ChevronRight className="w-3.5 h-3.5 text-text-muted flex-shrink-0 ml-auto" />
-        )}
+          {!expanded && (
+            <span className="min-w-0 max-w-full break-words text-xs text-text-muted/60 italic">
+              {previewNodes}
+            </span>
+          )}
+          <span
+            className={`inline-flex w-3.5 flex-shrink-0 items-center justify-center self-start pt-0.5 text-text-muted transition-opacity ${
+              expanded
+                ? "opacity-100"
+                : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+            }`}
+          >
+            {expanded ? (
+              <ChevronDown className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5" />
+            )}
+          </span>
+        </div>
       </button>
 
       {expanded && (

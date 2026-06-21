@@ -1,27 +1,40 @@
-import { describe, it, expect } from 'vitest';
-import fs from 'fs';
-import path from 'path';
+import { describe, it, expect } from "vitest";
+import fs from "fs";
+import path from "path";
 
-// Content split across MessageCard.tsx and the message/ sub-components directory
-function readMessageCard() {
-  const messageCardPath = path.resolve(__dirname, '../src/renderer/components/MessageCard.tsx');
-  const messageDir = path.resolve(__dirname, '../src/renderer/components/message');
-  return [
-    fs.readFileSync(messageCardPath, 'utf8'),
-    ...fs.readdirSync(messageDir).map((f) => fs.readFileSync(path.join(messageDir, f), 'utf8')),
-  ].join('\n');
+function readFile(relativePath: string) {
+  return fs.readFileSync(path.resolve(__dirname, relativePath), "utf8");
 }
 
-describe('message card file attachment layout', () => {
-  it('keeps user bubble shrinkable in flex layouts', () => {
-    const source = readMessageCard();
-    expect(source).toContain('max-w-[80%] min-w-0 break-words');
+describe("message card file attachment layout", () => {
+  it("keeps user bubble shrinkable in flex layouts", () => {
+    const source = readFile("../src/renderer/components/MessageCard.tsx");
+    expect(source).toContain("max-w-[80%] min-w-0 break-words");
   });
 
-  it('prevents file attachment row overflow with long filenames', () => {
-    const source = readMessageCard();
-    expect(source).toContain('max-w-full min-w-0');
-    expect(source).toContain('overflow-hidden');
-    expect(source).toContain('text-sm text-text-primary truncate');
+  it("prevents file attachment row overflow with long filenames", () => {
+    const source = readFile(
+      "../src/renderer/components/message/ContentBlockView.tsx",
+    );
+    expect(source).toContain("max-w-full min-w-0");
+    expect(source).toContain("overflow-hidden");
+    expect(source).toContain("text-xs text-text-primary truncate");
+  });
+
+  it("keeps thinking rows aligned with tool rows and inline chevrons", () => {
+    const source = readFile(
+      "../src/renderer/components/message/ThinkingBlock.tsx",
+    );
+    expect(source).toContain(
+      'Brain className="w-3.5 h-3.5 flex-shrink-0 pt-0.5 text-text-muted"',
+    );
+    expect(source).toContain(
+      "min-w-0 flex flex-1 flex-wrap items-baseline gap-x-1 gap-y-0.5",
+    );
+    expect(source).toContain("break-words text-xs text-text-muted/60 italic");
+    expect(source).toContain(
+      "inline-flex w-3.5 flex-shrink-0 items-center justify-center self-start pt-0.5",
+    );
+    expect(source).toContain("aria-expanded={expanded}");
   });
 });
